@@ -1,4 +1,7 @@
+import requests
+
 from settings import TOKEN
+from utils import consts
 
 class Player:
     def __init__(self, p, room):
@@ -17,13 +20,13 @@ class Player:
         self.current_room = room
         # auth token for requests
         self.token = TOKEN
-        self.auth = {"Authorization": f"{self.token}"}
+        self.auth = {"Authorization": f"Token {self.token}"}
 
     def initalize(self):
         '''Get all relevant stats before player starts moving.'''
         res = requests.get(
             f"{consts['path']}{consts['init']}", 
-            headers=self.authorization
+            headers=self.auth
         )
         return res.json()
     
@@ -31,16 +34,16 @@ class Player:
         '''Move the player in a provided direction.'''
         res = requests.post(
             f"{consts['path']}{consts['move']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"direction": f"{direction}"}
         )
         return res.json()
     
-    def wise_explorer(self, direction, next_room_id):
+    def wise_explore(self, direction, next_room_id):
         '''Move the player to a known room for 50% faster cooldown.'''
         res = requests.post(
             f"{consts['path']}{consts['move']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"direction": f"{direction}", "next_room_id": f"{next_room_id}"}
         )
         return res.json()
@@ -49,7 +52,7 @@ class Player:
         '''Pick up an item found in a room.'''
         res = requests.post(
             f"{consts['path']}{consts['take']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"name": f"{item_name}"}
         )
         return res.json()
@@ -58,7 +61,7 @@ class Player:
         '''Drop an item held in inventory.'''
         res = requests.post(
             f"{consts['path']}{consts['drop']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"name": f"{item_name}"}
         )
         return res.json()
@@ -67,7 +70,7 @@ class Player:
         '''Sell an item held in inventory at a shop.'''
         res = requests.post(
             f"{consts['path']}{consts['sell']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"name": f"{item_name}", 'confirm': 'yes'}
         )
         return res.json()
@@ -76,7 +79,7 @@ class Player:
         '''Examine items in inventory'''
         res = requests.post(
             f"{consts['path']}{consts['examine']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"name": f"{item_name}"}
         )
 
@@ -84,15 +87,15 @@ class Player:
         '''Examine player in the same room'''
         res = requests.post(
             f"{consts['path']}{consts['examine']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"name": f"{player_name}"}
         )
     
-    def status(self):
+    def get_status(self):
         '''Check status and inventory.'''
         res = requests.post(
             f"{consts['path']}{consts['status']}", 
-            headers=self.authorization
+            headers=self.auth
         )
         return res.json()
     
@@ -100,22 +103,22 @@ class Player:
         '''Change player name at a name changer room'''
         res = requests.post(
             f"{consts['path']}{consts['change_name']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"name": f"{new_name}"}
         )
     
-    def pray_at_shrine(self):
+    def pray(self):
         '''Pray at a shrine to earn powers'''
         res = requests.post(
             f"{consts['path']}{consts['pray']}", 
-            headers=self.authorization
+            headers=self.auth
         )
     
     def fly(self, direction):
         '''Use the flight power to move without penalty on elevated terrain'''
         res = requests.post(
             f"{consts['path']}{consts['fly']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"direction": f"{direction}"}
         )
         return res.json()
@@ -125,8 +128,7 @@ class Player:
         next_room_ids = ",".join([str(item) for item in next_rooms_list])
         res = requests.post(
             f"{consts['path']}{consts['fly']}", 
-            headers=self.authorization,
+            headers=self.auth,
             json={"direction": f"{next_room_ids}"}
         )
         return res.json()
-        
