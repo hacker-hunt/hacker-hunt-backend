@@ -1,22 +1,10 @@
 import os
-import requests
 
-from flask import Flask, jsonify, request
-from utils import consts
+from flask import Flask
 from mongo import Database
-from settings import TOKEN, DB, DB_NAME
-
-
-class FlaskTest():
-    def get_init(self):
-        res = requests.get(f"{consts['path']}{consts['init']}", headers={
-                           'Authorization': f"Token {TOKEN}"})
-        return res.json()
-
-    def get_status(self):
-        res = requests.post(f"{consts['path']}{consts['status']}", headers={
-                            'Authorization': f"Token {TOKEN}"})
-        return res.json()
+from player import Player
+from test_obj import test_obj
+from settings import DB, DB_NAME
 
 
 app = Flask(__name__)
@@ -30,21 +18,18 @@ def server_check():
 @app.route('/launch')
 def launch_app():
     '''Initiates the application, the main logic loop goes inside here'''
-    FT = FlaskTest()
-    db = Database(os.environ['DB'], os.environ['DB_NAME'])
+
+    p = Player(test_obj['test_player'], test_obj['test_room'])
+    db = Database(DB, DB_NAME)
     db_id = db.get_id()
 
     # get init
-    init = FT.get_init()
+    init = p.initalize()
     print(f"Number of players: {len(init['players'])}")
     # test db connection
     db.update_visited(db_id, init["room_id"])
 
     return f"{init}"
-
-    # get status
-    # status = FT.get_status()
-    # return f"{status}"
 
 
 if __name__ == '__main__':
