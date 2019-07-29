@@ -9,6 +9,10 @@ from settings import DB, DB_NAME
 
 app = Flask(__name__)
 
+p = Player(test_obj['test_player'], test_obj['test_room'])
+db = Database(DB, DB_NAME)
+db_id = db.get_id()
+
 
 @app.route('/')
 def server_check():
@@ -19,17 +23,16 @@ def server_check():
 def launch_app():
     '''Initiates the application, the main logic loop goes inside here'''
 
-    p = Player(test_obj['test_player'], test_obj['test_room'])
-    db = Database(DB, DB_NAME)
-    db_id = db.get_id()
-
     # get init
     init = p.initalize()
     print(f"Number of players: {len(init['players'])}")
-    # test db connection
-    db.update_visited(db_id, init["room_id"])
-
     return f"{init}"
+
+
+@app.route('/player')
+def player_check():
+    res = p.get_status()
+    return f"{res}"
 
 
 if __name__ == '__main__':
