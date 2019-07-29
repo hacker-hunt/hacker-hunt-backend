@@ -3,7 +3,9 @@ import requests
 
 from flask import Flask, jsonify, request
 from utils import consts
-from mongo import find_any, update_visited
+from mongo import Database
+from settings import TOKEN, DB, DB_NAME
+
 
 class ServerRequests():
     '''Construct a new SR class'''
@@ -126,25 +128,41 @@ class ServerRequests():
 
 app = Flask(__name__)
 
+
+@app.route('/')
+def server_check():
+    return 'Server is running'
+
+
 @app.route('/launch')
 def launch_app():
     '''Initiates the application, the main logic loop goes inside here'''
     FT = FlaskTest()
-
-    if not find_any():
-        db_id = insert_to_db()
-    else:
-        a = find_any()
-        db_id = a["_id"]
+    db = Database(os.environ['DB'], os.environ['DB_NAME'])
+    db_id = db.get_id()
 
     # get init
+<<<<<<< HEAD
     init = FT.initalize()
     update_visited(db_id, init["room_id"])
+=======
+    init = FT.get_init()
+    print(f"Number of players: {len(init['players'])}")
+    # test db connection
+    db.update_visited(db_id, init["room_id"])
+
+>>>>>>> master
     return f"{init}"
 
     # get status
     # status = FT.status()
     # return f"{status}"
 
+<<<<<<< HEAD
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+=======
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+>>>>>>> master
