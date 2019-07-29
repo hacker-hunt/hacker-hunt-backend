@@ -142,27 +142,17 @@ def launch_app():
     db_id = db.get_id()
 
     # get init
-<<<<<<< HEAD
-    init = FT.initalize()
-    update_visited(db_id, init["room_id"])
-=======
     init = FT.get_init()
     print(f"Number of players: {len(init['players'])}")
     # test db connection
     db.update_visited(db_id, init["room_id"])
 
->>>>>>> master
     return f"{init}"
 
     # get status
     # status = FT.status()
     # return f"{status}"
 
-<<<<<<< HEAD
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-=======
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
->>>>>>> master
