@@ -8,17 +8,17 @@ class Algo:
 
     # start and target are both instances of Room Class
     # returns the path (list of room_id) from START to TARGET
-    def bfs(self, start, target):
+    def explore(self, start, target):
         que = Queue()
         # enqueue first room
         que.enqueue({"node": start, "path": []})
-        bfs_visited = set()
+        visited = set()
 
         while que.size() > 0:
             current_room = que.queue[0]
 
-            if current_room["node"].room_id not in bfs_visited:
-                bfs_visited.add(current_room["node"].room_id)
+            if current_room["node"].room_id not in visited:
+                visited.add(current_room["node"].room_id)
 
                 if current_room["node"].room_id == target.room_id:
                     current_room["path"].append(current_room["node"].room_id)
