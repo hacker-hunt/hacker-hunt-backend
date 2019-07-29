@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 requests = "*"
-flask = "*"
+flask = "==0.12.2"
 pymongo = "*"
 dnspython = "*"
 
