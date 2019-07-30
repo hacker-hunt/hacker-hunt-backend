@@ -14,7 +14,7 @@ class Database:
 
     def insert_to_db(self):
         # add item to DB
-        v = {"visited": [], "global_que": [], "map": {}}
+        v = {"visited": [], "global_que": [], "map": {}, "shops": []}
         data_result = self.data.insert_one(v)
 
         # get ID of item added to DB
