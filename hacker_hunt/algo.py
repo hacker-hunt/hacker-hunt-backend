@@ -1,6 +1,7 @@
 import time
 
 from utils import Stack, Queue
+from player import get_status
 
 
 # Update directions in map for both rooms
@@ -45,15 +46,24 @@ def treasure_check(room, player):
         for item in room['items']:
             # examine each treasure if you can pick it up
             examined_item = player.examine_item(item)
+            # wait for cooldown before picking it up
+            time.sleep(examined_item['cooldown'])
+
+            # get the latest player status
+            status = get_status()
+            time.sleep(status['cooldown'])
+            player.update_player(status)
+
             # see if player have enough capacity to pick it up
             player_capacity = player['strength'] - \
                 player['encumbrance']
-            # wait for cooldown before picking it up
-            time.sleep(examined_item['cooldown'])
+            print(f'Examining item: {examined_item}')
             if player_capacity > examined_item['weight']:
                 # pick it up
                 res = player.take_item(item)
-                print(f'{res}')
+                print(f'Picked up an item: {res}')
+                # wait for cooldown before moving on
+                time.sleep(res['cooldown'])
             else:
                 print(
                     f"There was an item '{item}', which I could not pick up")
