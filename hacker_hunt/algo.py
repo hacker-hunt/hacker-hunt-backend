@@ -11,15 +11,15 @@ def traverse(start, target):
     # enqueue first room
     que.enqueue({"node": start, "path": []})
     visited = set()
-    print(f'Moving back from {start.room_id} to {target.room_id}')
+    print(f'Moving back from {start["room_id"]} to {target["room_id"]}')
     while que.size() > 0:
         current_room = que.queue[0]
 
-        if current_room["node"].room_id not in visited:
-            visited.add(current_room["node"].room_id)
-            print(f'Currently in {current_room["node"].room_id}')
-            if current_room["node"].room_id == target.room_id:
-                current_room["path"].append(current_room["node"].room_id)
+        if current_room["node"]["room_id"] not in visited:
+            visited.add(current_room["node"]["room_id"])
+            print(f'Currently in {current_room["node"]["room_id"]}')
+            if current_room["node"]["room_id"] == target["room_id"]:
+                current_room["path"].append(current_room["node"]["room_id"])
                 return current_room["path"]
 
             # add all neighbouring nodes to queue
@@ -29,7 +29,7 @@ def traverse(start, target):
 
                 # Make a COPY of the PATH set from current node to neighbour nodes
                 path_to_neighbour = current_room["path"].copy()
-                path_to_neighbour.append(current_room["node"].room_id)
+                path_to_neighbour.append(current_room["node"]["room_id"])
 
                 que.enqueue(
                     {"node": room, "path": path_to_neighbour})
