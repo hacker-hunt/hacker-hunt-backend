@@ -68,11 +68,13 @@ def treasure_check(room, player):
             else:
                 print(
                     f"There was an item '{item}', which I could not pick up")
+    else:
+        print('Nothing to pick up here')
 
 
 # check if room is a shop. save it in DB and sell items if yes
 def shop_check(room, player, db, db_id):
-    print(f"PLAYER: {player['inventory']}")
+    print(f"Player inventory: {player['inventory']}")
     if room['title'] == 'Shop':
         if len(player['inventory']) > 0:
             # sell treasures
@@ -90,7 +92,7 @@ def shop_check(room, player, db, db_id):
                         db_id, [room['room_id'], room["coordinates"]])
         else:
             db.update_shops(
-                        db_id, [room['room_id'], room["coordinates"]])
+                db_id, [room['room_id'], room["coordinates"]])
 
 
 # start and target are both instances of Room Class
@@ -114,7 +116,7 @@ def traverse(start, target, db):
             db_id = db.get_id()
             game_map = db.get_map(db_id)
             # add all neighbouring nodes to queue
-            for direction in current_room["node"].get_exits():
+            for direction in current_room["node"]["exits"]:
                 # get ID of the room, that is in direction
                 room_in_direction_id = game_map[str(cr_id)][direction]
                 # grab that room from DB
@@ -173,7 +175,7 @@ def explore(player, db, db_id):
         print(
             f'Currently in room {current_room_id} moving to {current_room_dir}')
         global_visited = db.get_visited(db_id)
-        if current_room_id not in local_visited and current_room not in global_visited:
+        if current_room_id not in local_visited or current_room not in global_visited:
             local_visited.add(current_room_id)
             db.update_visited(db_id, current_room)
             print(
@@ -182,11 +184,13 @@ def explore(player, db, db_id):
             global_map = db.get_map(db_id)
 
             if current_room_id not in global_map:
-                global_map[current_room_id] = {"n": None, "s": None, "e": None, "w": None}
+                global_map[current_room_id] = {
+                    "n": None, "s": None, "e": None, "w": None}
             cur_room_dirs = global_map[current_room_id]
             # check whether the next dir exists on the db map
             if cur_room_dirs[current_room_dir] is not None:
-                next_room = player.wise_explore(current_room_dir, cur_room_dirs[current_room_dir])
+                next_room = player.wise_explore(
+                    current_room_dir, cur_room_dirs[current_room_dir])
             else:
                 # otherwise just use move
                 next_room = player.move(current_room_dir)
@@ -228,28 +232,27 @@ def explore(player, db, db_id):
                     # if current_room_id == s.stack[-1].id (you hit a dead end in looped nodes(cyclic graph))
                     # take s.stack[-2].id as TARGET if it exist
                     # if it doesnt (means the stack is empty) you are finished
-                    if current_room_id == list(s.stack[-1].keys())[0]:
+                    if next_room["room_id"] == list(s.stack[-1].keys())[0]:
                         # BFS entry and target nodes:
                         # both have to be instances of Room class
-
                         # get rooms from DB by their ID
-                        start = db.get_room_by_id(current_room_id)
+                        start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(
                             list(s.stack[-2].keys())[0])
-
+                        # TODO if target == None, get g.que[0]
                         shortest_path = traverse(
                             start, target, db)
 
                     else:
                         # BFS entry and target nodes:
                         # get room from DB by its ID
-                        start = db.get_room_by_id(current_room_id)
+                        start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(
                             list(s.stack[-1].keys())[0])
 
                         shortest_path = traverse(
                             start, target, db)
-
+                    """
                     # for each room in shortest_path do a wise-explore request
                     # handle the start case
                     global_map = db.get_map(db_id)
@@ -261,26 +264,32 @@ def explore(player, db, db_id):
                         if room_id == next_room_id:
                             next_direction = direction
                     # make wise explore request
-                    second_room = player.wise_explore(next_direction, next_room_id)
+                    second_room = player.wise_explore(
+                        next_direction, next_room_id)
                     # do cooldown in between each loop
                     time.sleep(second_room["cooldown"])
-
+                    """
                     for idx, room_id in enumerate(shortest_path):
                         # initialize destination variable
                         destination_id = ""
                         # get instance of room class
                         global_map = db.get_map(db_id)
-                        origin = global_map[room_id]
+                        origin = global_map[str(room_id)]
+
                         # check to see if it's the last room in the list
                         if idx < (len(shortest_path) - 1):
                             # get next room in list
                             destination_id = shortest_path[idx+1]
                             # find dir to destination
-                            for direction, room_id in origin:
-                                if room_id == destination_id:
+                            for direction, room_id in origin.items():
+                                # TODO KEYERROR for NONE values... can not be int(None)
+                                if room_id and int(room_id) == destination_id:
                                     next_direction = direction
+
                             # make wise explore request
-                            destination_room = player.wise_explore(next_direction, destination_id)
+                            destination_room = player.wise_explore(
+                                next_direction, destination_id)
+                            print(f'destination room: {destination_room}')
                             # do cooldown in between each loop
                             time.sleep(destination_room["cooldown"])
 
@@ -294,4 +303,5 @@ def explore(player, db, db_id):
             time.sleep(next_room["cooldown"])
             print('Woke up\n')
         else:
-            print(f"cr_id: {current_room_id} in {local_visited}\n{current_room} in {global_visited}")
+            print(
+                f"cr_id: {current_room_id} in {local_visited}\n{current_room} in {global_visited}")
