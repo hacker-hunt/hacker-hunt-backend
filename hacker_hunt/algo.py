@@ -109,7 +109,7 @@ def treasure_check(room, player, db, db_id):
                 # get shop room from DB
                 shop_room = db.get_room_by_id(shop_id)
                 # traverse there
-                shortest_path = traverse(room, shop_room, db)
+                shortest_path = find_nearest_shop(room, db, db_id)
                 traverse_path(shortest_path, player, db, db_id)
 
     else:
@@ -139,6 +139,24 @@ def shop_check(room, player, db, db_id):
         else:
             db.update_shops(
                 db_id, [room['room_id'], room["coordinates"]])
+
+
+# find nearest shop
+# run traverse for every current_room - shop pair
+# and return the shortest
+def find_nearest_shop(room, db, db_id):
+    # get shops from DB
+    shops = db.get_shops(db_id)
+    shortest_path_len = 100000
+    shortest_path = None
+    if len(shops) > 0:
+        for shop in shops:
+            path = traverse(room, shop, db)
+
+            if len(path) < shortest_path_len:
+                shortest_path = path
+
+    return shortest_path
 
 
 # start and target are both instances of Room Class
