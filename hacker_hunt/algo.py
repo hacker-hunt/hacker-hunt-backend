@@ -48,14 +48,15 @@ def treasure_check(room, player):
             # see if player have enough capacity to pick it up
             player_capacity = player['strength'] - \
                 player['encumbrance']
+            # wait for cooldown before picking it up
+            time.sleep(examined_item['cooldown'])
             if player_capacity > examined_item['weight']:
-                time.sleep(examined_item['cooldown'])
                 # pick it up
-                player.take_item(item)
+                res = player.take_item(item)
+                print(f'{res}')
             else:
                 print(
                     f"There was an item '{item}', which I could not pick up")
-                time.sleep(examined_item['cooldown'])
 
 
 # start and target are both instances of Room Class
