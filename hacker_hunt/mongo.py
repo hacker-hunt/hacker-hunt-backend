@@ -7,8 +7,10 @@ class Database:
         self.client = MongoClient(url)
         # create DB
         self.db = self.client[db_name]
-        # create collection 'visited'
+        # create collection 'data' that contains 'visited' list, 'global_que' list and 'map' dict
         self.data = self.db.data
+        # create colelction 'rooms' that contains instances of Room class
+        self.rooms = self.db.rooms
 
     def insert_to_db(self):
         # add item to DB
@@ -73,3 +75,19 @@ class Database:
             a = self.find_any()
             db_id = a["_id"]
         return db_id
+
+    def insert_room(self, room):
+        # add room to DB
+        room_result = self.rooms.insert_one(room)
+
+        # get ID of item added to DB
+        room_id = room_result.inserted_id
+
+        print(f'Created new room: {room["room_id"]} in DB')
+        return room_id
+
+    def get_room_by_id(self, id):
+        # check online how to filter query based on object property {"room_id": id}
+        query = {"room_id": id}
+        room_dict = self.rooms.find_one(query)
+        return room_dict
