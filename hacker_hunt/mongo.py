@@ -83,7 +83,7 @@ class Database:
         # get ID of item added to DB
         room_id = room_result.inserted_id
 
-        print(f'Created new room: {room_id}')
+        print(f'Created new room: {room["room_id"]} in DB')
         return room_id
 
     def get_room_by_id(self, id):
