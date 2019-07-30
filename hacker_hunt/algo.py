@@ -41,8 +41,34 @@ def update_map(current_room, next_room, db, db_id):
         db.update_map(db_id, game_map)
 
 
+# traverse shortest path
+def traverse_path(shortest_path, player, db, db_id):
+    for idx, room_id in enumerate(shortest_path):
+        # initialize destination variable
+        destination_id = ""
+        # get instance of room class
+        global_map = db.get_map(db_id)
+        origin = global_map[str(room_id)]
+
+        # check to see if it's the last room in the list
+        if idx < (len(shortest_path) - 1):
+            # get next room in list
+            destination_id = shortest_path[idx+1]
+            # find dir to destination
+            for direction, room_id in origin.items():
+                if room_id and int(room_id) == destination_id:
+                    next_direction = direction
+
+            # make wise explore request
+            destination_room = player.wise_explore(
+                next_direction, destination_id)
+            print(f'destination room: {destination_room}')
+            # do cooldown in between each loop
+            time.sleep(destination_room["cooldown"])
+
+
 # check for treasure and pick it up if you can
-def treasure_check(room, player):
+def treasure_check(room, player, db, db_id):
     print(f"Examining room for treasure and picking it up if I can")
     if len(room['items']) > 0:
         print('Waiting for CD before picking up items')
@@ -73,6 +99,19 @@ def treasure_check(room, player):
             else:
                 print(
                     f"There was an item '{item}', which I could not pick up")
+
+            # if the player is carrying over 80% of his capacity, go to Shop at ID 1
+            if player_capacity + examined_item['weight'] > 0.8*player_capacity:
+                # get shop ID
+                shops = db.get_shops(db_id)
+                # first shop (ID 1), first item from ID1 shop = ID
+                shop_id = shops[0][0]
+                # get shop room from DB
+                shop_room = db.get_room_by_id(shop_id)
+                # traverse there
+                shortest_path = traverse(room, shop_room, db)
+                traverse_path(shortest_path, player, db, db_id)
+
     else:
         print('Nothing to pick up here')
 
@@ -209,7 +248,7 @@ def explore(player, db, db_id):
             shop_check(next_room, player, db, db_id)
 
             # check for treasure
-            treasure_check(next_room, player)
+            treasure_check(next_room, player, db, db_id)
 
             # update map with newly discovered directions
             update_map(current_room, next_room, db, db_id)
@@ -262,28 +301,7 @@ def explore(player, db, db_id):
                         shortest_path = traverse(
                             start, target, db)
 
-                    for idx, room_id in enumerate(shortest_path):
-                        # initialize destination variable
-                        destination_id = ""
-                        # get instance of room class
-                        global_map = db.get_map(db_id)
-                        origin = global_map[str(room_id)]
-
-                        # check to see if it's the last room in the list
-                        if idx < (len(shortest_path) - 1):
-                            # get next room in list
-                            destination_id = shortest_path[idx+1]
-                            # find dir to destination
-                            for direction, room_id in origin.items():
-                                if room_id and int(room_id) == destination_id:
-                                    next_direction = direction
-
-                            # make wise explore request
-                            destination_room = player.wise_explore(
-                                next_direction, destination_id)
-                            print(f'destination room: {destination_room}')
-                            # do cooldown in between each loop
-                            time.sleep(destination_room["cooldown"])
+                    traverse_path(shortest_path, player, db, db_id)
 
                 except IndexError:
                     print('We are done!')
