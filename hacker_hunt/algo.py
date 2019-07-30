@@ -58,9 +58,10 @@ def explore(player, db, db_id):
             db.update_que(db_id, {str(init_room["room_id"]): direction})
         print(f"stack: {s.stack}")
         print(f"que: {db.get_que(db_id)}")
-        # TODO ADD COOLDOWN management HERE
+
+        # cooldown management
         print('Going to sleep')
-        time.sleep(61)
+        time.sleep(init_room["cooldown"])
         print('Woke up')
     # STOP conditon == empty local stack and global que
     while s.size() > 0 or len(db.get_que(db_id)):
@@ -175,7 +176,7 @@ def explore(player, db, db_id):
                 except IndexError:
                     print('We are done!')
 
-            # TODO Add cooldown management here
+            # cooldown management
             print('Going to sleep')
-            time.sleep(61)
+            time.sleep(next_room["cooldown"])
             print('Woke up\n')
