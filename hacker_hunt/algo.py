@@ -1,7 +1,7 @@
 import time
 
 from utils import Stack, Queue
-from room import Room
+from player import get_status
 
 
 # Update directions in map for both rooms
@@ -37,6 +37,53 @@ def update_map(current_room, next_room, db, db_id):
         game_map[current_room_id] = current_map_directions
         game_map[next_room["room_id"]] = next_map_dir
         db.update_map(db_id, game_map)
+
+
+# check for treasure and pick it up if you can
+def treasure_check(room, player):
+    print(f"Examining room for treasure and picking it up if I can")
+    if len(room['items']) > 0:
+        for item in room['items']:
+            # examine each treasure if you can pick it up
+            examined_item = player.examine_item(item)
+            # wait for cooldown before picking it up
+            time.sleep(examined_item['cooldown'])
+
+            # get the latest player status
+            status = get_status()
+            time.sleep(status['cooldown'])
+            player.update_player(status)
+
+            # see if player have enough capacity to pick it up
+            player_capacity = player['strength'] - \
+                player['encumbrance']
+            print(f'Examining item: {examined_item}')
+            if player_capacity > examined_item['weight']:
+                # pick it up
+                res = player.take_item(item)
+                print(f'Picked up an item: {res}')
+                # wait for cooldown before moving on
+                time.sleep(res['cooldown'])
+            else:
+                print(
+                    f"There was an item '{item}', which I could not pick up")
+
+
+# check if room is a shop. save it in DB and sell items if yes
+def shop_check(room, player, db, db_id):
+    if room['title'] == 'Shop':
+        # sell treasures
+        for item in player['inventory']:
+            shop_res = player.sell_item(item)
+            time.sleep(shop_res['cooldown'])
+            print(f'{shop_res}')
+
+        # get shops from DB to check if its already saved
+        shops = db.get_shops(db_id)
+        for shop in shops:
+            if room['room_id'] not in shop[0]:
+                db.update_shops(
+                    db_id, [room['room_id'], room["coordinates"]])
 
 
 # start and target are both instances of Room Class
@@ -135,21 +182,18 @@ def explore(player, db, db_id):
             db.insert_room(next_room)
 
             # check if next room is a shop and save it in DB if it is
-            if next_room['title'] == 'Shop':
-                # get shops from DB to check if its already saved
-                shops = db.get_shops(db_id)
-                if next_room['room_id'] not in shops:
-                    db.update_shops(
-                        db_id, [next_room['room_id'], next_room["coordinates"]])
+            shop_check(next_room, player, db, db_id)
+
+            # check for treasure
+            treasure_check(next_room, player)
 
             # update map with newly discovered directions
             update_map(current_room, next_room, db, db_id)
 
             stack_before = s.size()
 
-            next_room_instance = Room(next_room)
             # add exits from next_room to stack and que
-            for direction in next_room_instance.get_exits():
+            for direction in next_room["exits"]:
                 n_dict = {str(next_room["room_id"]): direction}
                 global_visited = db.get_visited(db_id)
                 if next_room["room_id"] not in local_visited and n_dict not in global_visited:
