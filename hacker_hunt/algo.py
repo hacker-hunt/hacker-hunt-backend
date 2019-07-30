@@ -70,9 +70,10 @@ def shop_check(room, player, db, db_id):
 
         # get shops from DB to check if its already saved
         shops = db.get_shops(db_id)
-        if room['room_id'] not in shops:
-            db.update_shops(
-                db_id, [room['room_id'], room["coordinates"]])
+        for shop in shops:
+            if room['room_id'] not in shop[0]:
+                db.update_shops(
+                    db_id, [room['room_id'], room["coordinates"]])
 
 
 # start and target are both instances of Room Class
