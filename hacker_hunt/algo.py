@@ -90,10 +90,15 @@ def explore(player, db, db_id):
             print(
                 f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
             # Make request for next movement
-            # TODO optimize the request => IF you have the room ID in current_room_dir
-            # use wise explorer to save cooldown
-            # otherwise just use move
-            next_room = player.move(current_room_dir)
+            next_room = None
+            if current_room[f"{current_room_dir}_to"]:
+                # make wise explore request
+                known_destination = current_room[f"{current_room_dir}_to"]["room_id"]
+                next_room = player.wise_explore(current_room_dir, known_destination)
+            else: 
+                # otherwise just use move
+                next_room = player.move(current_room_dir)
+
             print(f'Game server response: {next_room}\n')
             print(f"next room is {next_room['room_id']}")
             # save next_room in DB
@@ -183,32 +188,28 @@ def explore(player, db, db_id):
                     # for each room in shortest_path do a wise-explore request
                     for idx, room_id in enumerate(shortest_path):
                         # initialize destination variable
-                        destination = ""
+                        destination_id = ""
                         # get instance of room class
                         origin = db.get_room_by_id(room_id)
-                        
                         # check to see if it's the last room in the list
                         if idx < (len(rooms) - 1):
                             # get next room in list
-                            destination = shortest_path[i+1]
+                            destination_id = shortest_path[i+1]
                         else:
                             # go to target room
-                            destination = target["room_id"]
-                        
+                            destination_id = target["room_id"]
                         # find dir to destination
                         dir_to_destination = ""
-                        if origin["n_to"] == destination:
+                        if origin["n_to"]["room_id"] == destination_id:
                             dir_to_destination = "n"
-                        elif origin["s_to"] == destination:
+                        elif origin["s_to"]["room_id"] == destination_id:
                             dir_to_destination = "s"
-                        elif origin["e_to"] == destination:
+                        elif origin["e_to"]["room_id"] == destination_id:
                             dir_to_destination = "e"
-                        elif origin "w_to" == destination:
+                        elif origin["w_to"]["room_id"] == destination_id:
                             dir_to_destination = "w"
-                        
                         # make wise explore request
-                        destination_room = player.wise_explore(dir_to_destination, destination)
-                        
+                        destination_room = player.wise_explore(dir_to_destination, destination_id)
                         # do cooldown in between each loop
                         time.sleep(destination_room["cooldown"])
 
