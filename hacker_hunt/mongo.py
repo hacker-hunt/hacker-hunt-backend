@@ -97,3 +97,11 @@ class Database:
         query = {"_id": id}
         a = self.data.find_one(query)
         return a['shops']
+
+    def update_shop(self, id, shop):
+        a = self.get_shop(id)
+        # update item in DB
+        b = a.copy()
+        b.append(shop)
+        new_a = {"$set": {"shops": b}}
+        self.data.update_one({"_id": id}, new_a)
