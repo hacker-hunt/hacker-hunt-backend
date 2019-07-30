@@ -91,3 +91,9 @@ class Database:
         query = {"room_id": id}
         room_dict = self.rooms.find_one(query)
         return room_dict
+
+    def get_shop(self, id):
+        # find item from DB
+        query = {"_id": id}
+        a = self.data.find_one(query)
+        return a['shops']
