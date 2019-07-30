@@ -6,7 +6,7 @@ from room import Room
 
 # start and target are both instances of Room Class
 # returns the path (list of room_id) from START to TARGET
-def traverse(start, target):
+def traverse(start, target, db):
     que = Queue()
     # enqueue first room
     que.enqueue({"node": start, "path": []})
@@ -14,22 +14,26 @@ def traverse(start, target):
     print(f'Moving back from {start["room_id"]} to {target["room_id"]}')
     while que.size() > 0:
         current_room = que.queue[0]
-
-        if current_room["node"]["room_id"] not in visited:
-            visited.add(current_room["node"]["room_id"])
-            print(f'Currently in {current_room["node"]["room_id"]}')
-            if current_room["node"]["room_id"] == target["room_id"]:
-                current_room["path"].append(current_room["node"]["room_id"])
+        cr_id = current_room["node"]["room_id"]
+        if cr_id not in visited:
+            visited.add(cr_id)
+            print(f'Currently in {cr_id}')
+            if cr_id == target["room_id"]:
+                current_room["path"].append(cr_id)
                 return current_room["path"]
 
+            db_id = db.get_id()
+            game_map = db.get_map(db_id)
             # add all neighbouring nodes to queue
             for direction in current_room["node"].get_exits():
-                room = current_room["node"].get_room_in_direction(
-                    direction)
+                # get ID of the room, that is in direction
+                room_in_direction_id = game_map[str(cr_id)][direction]
+                # grab that room from DB
+                room = db.get_room_by_id(room_in_direction_id)
 
                 # Make a COPY of the PATH set from current node to neighbour nodes
                 path_to_neighbour = current_room["path"].copy()
-                path_to_neighbour.append(current_room["node"]["room_id"])
+                path_to_neighbour.append(cr_id)
 
                 que.enqueue(
                     {"node": room, "path": path_to_neighbour})
@@ -86,6 +90,9 @@ def explore(player, db, db_id):
             print(
                 f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
             # Make request for next movement
+            # TODO optimize the request => IF you have the room ID in current_room_dir
+            # use wise explorer to save cooldown
+            # otherwise just use move
             next_room = player.move(current_room_dir)
             print(f'Game server response: {next_room}\n')
             print(f"next room is {next_room['room_id']}")
@@ -159,8 +166,10 @@ def explore(player, db, db_id):
                         start = db.get_room_by_id(current_room_id)
                         target = db.get_room_by_id(
                             list(s.stack[-2].keys())[0])
+
+                        # TODO MAKE MOVE REQUESTS ACCORDING TO THE SHORTEST PATH LIST
                         shortest_path = traverse(
-                            start, target)
+                            start, target, db)
 
                     else:
                         # BFS entry and target nodes:
@@ -168,8 +177,10 @@ def explore(player, db, db_id):
                         start = db.get_room_by_id(current_room_id)
                         target = db.get_room_by_id(
                             list(s.stack[-1].keys())[0])
+
+                        # TODO MAKE MOVE REQUESTS ACCORDING TO THE SHORTEST PATH LIST
                         shortest_path = traverse(
-                            start, target)
+                            start, target, db)
 
                     print(f"Path from traverse: {shortest_path}")
 

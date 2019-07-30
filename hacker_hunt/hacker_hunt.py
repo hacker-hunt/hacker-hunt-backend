@@ -14,6 +14,16 @@ p = Player(get_status())
 db = Database(DB, DB_NAME)
 db_id = db.get_id()
 
+# Manual commands test
+# print(p.dash('w', '7', '327,256,243,178,90,86,80'))
+# print(f"{p.move('e')}")
+# print(f"{p.wise_explore('w', 243)}")
+# print(get_status())
+# print(p.sell_item())
+# print(p.examine_item('tiny treasure'))
+
+# print(f"{p.take_item()}")
+
 
 @app.route('/')
 def server_check():
