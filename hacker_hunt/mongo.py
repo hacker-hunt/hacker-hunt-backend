@@ -88,7 +88,7 @@ class Database:
 
     def get_room_by_id(self, id):
         # check online how to filter query based on object property {"room_id": id}
-        query = {"room_id": id}
+        query = {"room_id": int(id)}
         room_dict = self.rooms.find_one(query)
         return room_dict
 
@@ -98,7 +98,7 @@ class Database:
         a = self.data.find_one(query)
         return a['shops']
 
-    def update_shop(self, id, shop):
+    def update_shops(self, id, shop):
         a = self.get_shops(id)
         # update item in DB
         b = a.copy()
