@@ -172,15 +172,19 @@ def explore(player, db, db_id):
             print(
                 f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
             # Make request for next movement
-            # TODO optimize the request => IF you have the room ID in current_room_dir
-            # use wise explorer to save cooldown
-            # otherwise just use move
-            next_room = player.move(current_room_dir)
+            global_map = db.get_map(db_id)
+            cur_room_dirs = global_map[current_room_id]
+            # check whether the next dir exists on the db map
+            if cur_room_dirs[current_room_dir] is not None:
+                next_room = player.wise_explore(current_room_dir, cur_room_dirs[current_room_dir])
+            else: 
+                # otherwise just use move
+                next_room = player.move(current_room_dir)
+
             print(f'Game server response: {next_room}\n')
             print(f"next room is {next_room['room_id']}")
             # save next_room in DB
             db.insert_room(next_room)
-
             # check if next room is a shop and save it in DB if it is
             shop_check(next_room, player, db, db_id)
 
@@ -220,7 +224,6 @@ def explore(player, db, db_id):
                         target = db.get_room_by_id(
                             list(s.stack[-2].keys())[0])
 
-                        # TODO MAKE MOVE REQUESTS ACCORDING TO THE SHORTEST PATH LIST
                         shortest_path = traverse(
                             start, target, db)
 
@@ -231,9 +234,42 @@ def explore(player, db, db_id):
                         target = db.get_room_by_id(
                             list(s.stack[-1].keys())[0])
 
-                        # TODO MAKE MOVE REQUESTS ACCORDING TO THE SHORTEST PATH LIST
                         shortest_path = traverse(
                             start, target, db)
+                    
+                    # for each room in shortest_path do a wise-explore request
+                    # handle the start case
+                    global_map = db.get_map(db_id)
+                    start = global_map[current_room_id]
+                    # find the idx 0 from shortest_path
+                    next_room_id = shortest_path[0]
+                    next_direction = ""
+                    for direction, room_id in start:
+                        if room_id == next_room_id:
+                            next_direction = direction
+                    # make wise explore request
+                    second_room = player.wise_explore(next_direction, next_room_id)
+                    # do cooldown in between each loop
+                    time.sleep(second_room["cooldown"])
+                
+                    for idx, room_id in enumerate(shortest_path):
+                        # initialize destination variable
+                        destination_id = ""
+                        # get instance of room class
+                        global_map = db.get_map(db_id)
+                        origin = global_map[room_id]
+                        # check to see if it's the last room in the list
+                        if idx < (len(shortest_path) - 1):
+                            # get next room in list
+                            destination_id = shortest_path[i+1]
+                            # find dir to destination
+                            for direction, room_id in origin:
+                                if room_id == destination_id:
+                                    next_direction = direction
+                            # make wise explore request
+                            destination_room = player.wise_explore(next_direction, destination_id)
+                            # do cooldown in between each loop
+                            time.sleep(destination_room["cooldown"])
 
                     print(f"Path from traverse: {shortest_path}")
 
