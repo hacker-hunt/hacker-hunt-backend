@@ -145,7 +145,10 @@ def find_nearest_shop(room, db, db_id):
     shortest_path = None
     if len(shops) > 0:
         for shop in shops:
-            path = traverse(room, shop, db)
+            # get shop ID
+            shop_id = shop[0]
+            shop_room = db.get_room_by_id(shop_id)
+            path = traverse(room, shop_room, db)
 
             if len(path) < shortest_path_len:
                 shortest_path = path
