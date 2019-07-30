@@ -22,6 +22,9 @@ class Player:
         self.token = TOKEN
         self.auth = {"Authorization": f"Token {self.token}"}
 
+    def __getitem__(self, name):
+        return getattr(self, name)
+
     def initalize(self):
         '''Get all relevant stats before player starts moving.'''
         res = requests.get(
