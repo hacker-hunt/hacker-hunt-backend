@@ -172,11 +172,11 @@ def explore(player, db, db_id):
             print(
                 f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
             # Make request for next movement
-            next_room = None
-            if current_room[f"{current_room_dir}_to"]:
-                # make wise explore request
-                known_destination = current_room[f"{current_room_dir}_to"]["room_id"]
-                next_room = player.wise_explore(current_room_dir, known_destination)
+            global_map = db.get_map(db_id)
+            cur_room_dirs = global_map[current_room_id]
+            # check whether the next dir exists on the db map
+            if cur_room_dirs[current_room_dir] is not None:
+                next_room = player.wise_explore(current_room_dir, cur_room_dirs[current_room_dir])
             else: 
                 # otherwise just use move
                 next_room = player.move(current_room_dir)
@@ -185,7 +185,6 @@ def explore(player, db, db_id):
             print(f"next room is {next_room['room_id']}")
             # save next_room in DB
             db.insert_room(next_room)
-
             # check if next room is a shop and save it in DB if it is
             shop_check(next_room, player, db, db_id)
 
