@@ -92,14 +92,14 @@ class Database:
         room_dict = self.rooms.find_one(query)
         return room_dict
 
-    def get_shop(self, id):
+    def get_shops(self, id):
         # find item from DB
         query = {"_id": id}
         a = self.data.find_one(query)
         return a['shops']
 
     def update_shop(self, id, shop):
-        a = self.get_shop(id)
+        a = self.get_shops(id)
         # update item in DB
         b = a.copy()
         b.append(shop)
