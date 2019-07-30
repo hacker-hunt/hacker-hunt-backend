@@ -238,9 +238,8 @@ def explore(player, db, db_id):
 
             print(f'Next room: {next_room}')
 
-            if next_room["room_id"] == 467:
-                print(f"FOUND Pirate Ry's. CHANGE NAME HERE")
-                sys.exit("FOUND Pirate Ry's. CHANGE NAME HERE")
+            # update map with newly discovered directions
+            update_map(current_room, next_room, db, db_id)
 
             # save next_room in DB
             db.insert_room(next_room)
@@ -250,8 +249,9 @@ def explore(player, db, db_id):
             # check for treasure
             treasure_check(next_room, player, db, db_id)
 
-            # update map with newly discovered directions
-            update_map(current_room, next_room, db, db_id)
+            if next_room["room_id"] == 467:
+                print(f"FOUND Pirate Ry's. CHANGE NAME HERE")
+                sys.exit("FOUND Pirate Ry's. CHANGE NAME HERE")
 
             stack_before = s.size()
 
