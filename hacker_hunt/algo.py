@@ -156,6 +156,12 @@ def explore(player, db, db_id):
 
             # check if next room is a shop and save it in DB if it is
             if next_room['title'] == 'Shop':
+                # sell treasures
+                for item in player['inventory']:
+                    shop_res = player.sell_item(item)
+                    time.sleep(shop_res['cooldown'])
+                    print(f'{shop_res}')
+
                 # get shops from DB to check if its already saved
                 shops = db.get_shops(db_id)
                 if next_room['room_id'] not in shops:
