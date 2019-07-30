@@ -142,6 +142,21 @@ def explore(player, db, db_id):
                     db.update_shops(
                         db_id, [next_room['room_id'], next_room["coordinates"]])
 
+            # check for treasure
+            if len(next_room['items']) > 0:
+                for item in next_room['items']:
+                    # examine each treasure if you can pick it up
+                    examined_item = player.examine_item(item)
+                    # see if player have enough capacity to pick it up
+                    player_capacity = player['strength'] - \
+                        player['encumbrance']
+                    if player_capacity > examined_item['weight']:
+                        time.sleep(examined_item['cooldown'])
+                        # pick it up
+                        player.take_item(item)
+                    else:
+                        time.sleep(examined_item['cooldown'])
+
             # update map with newly discovered directions
             update_map(current_room, next_room, db, db_id)
 
