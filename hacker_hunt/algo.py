@@ -1,7 +1,6 @@
 import time
 
 from utils import Stack, Queue
-from room import Room
 
 
 # Update directions in map for both rooms
@@ -170,9 +169,8 @@ def explore(player, db, db_id):
 
             stack_before = s.size()
 
-            next_room_instance = Room(next_room)
             # add exits from next_room to stack and que
-            for direction in next_room_instance.get_exits():
+            for direction in next_room["exits"]:
                 n_dict = {str(next_room["room_id"]): direction}
                 global_visited = db.get_visited(db_id)
                 if next_room["room_id"] not in local_visited and n_dict not in global_visited:
