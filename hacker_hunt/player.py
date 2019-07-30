@@ -131,6 +131,18 @@ class Player:
         )
         return res.json()
 
+    def update_player(self, p):
+        self.name = p["name"]
+        self.cooldown = p["cooldown"]
+        self.encumbrance = p["encumbrance"]
+        self.strength = p["strength"]
+        self.speed = p["speed"]
+        self.gold = p["gold"]
+        self.inventory = p["inventory"]
+        self.status = p["status"]
+        self.errors = p["errors"]
+        self.messages = p["messages"]
+
 
 # Use this function to initialize an instance of player
 def get_status():

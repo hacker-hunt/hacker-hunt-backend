@@ -14,7 +14,7 @@ class Database:
 
     def insert_to_db(self):
         # add item to DB
-        v = {"visited": [], "global_que": [], "map": {}}
+        v = {"visited": [], "global_que": [], "map": {}, "shops": []}
         data_result = self.data.insert_one(v)
 
         # get ID of item added to DB
@@ -91,3 +91,17 @@ class Database:
         query = {"room_id": id}
         room_dict = self.rooms.find_one(query)
         return room_dict
+
+    def get_shops(self, id):
+        # find item from DB
+        query = {"_id": id}
+        a = self.data.find_one(query)
+        return a['shops']
+
+    def update_shop(self, id, shop):
+        a = self.get_shops(id)
+        # update item in DB
+        b = a.copy()
+        b.append(shop)
+        new_a = {"$set": {"shops": b}}
+        self.data.update_one({"_id": id}, new_a)
