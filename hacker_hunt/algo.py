@@ -59,6 +59,22 @@ def treasure_check(room, player):
                     f"There was an item '{item}', which I could not pick up")
 
 
+# check if room is a shop. save it in DB and sell items if yes
+def shop_check(room, player, db, db_id):
+    if room['title'] == 'Shop':
+        # sell treasures
+        for item in player['inventory']:
+            shop_res = player.sell_item(item)
+            time.sleep(shop_res['cooldown'])
+            print(f'{shop_res}')
+
+        # get shops from DB to check if its already saved
+        shops = db.get_shops(db_id)
+        if room['room_id'] not in shops:
+            db.update_shops(
+                db_id, [room['room_id'], room["coordinates"]])
+
+
 # start and target are both instances of Room Class
 # returns the path (list of room_id) from START to TARGET
 def traverse(start, target, db):
@@ -155,18 +171,7 @@ def explore(player, db, db_id):
             db.insert_room(next_room)
 
             # check if next room is a shop and save it in DB if it is
-            if next_room['title'] == 'Shop':
-                # sell treasures
-                for item in player['inventory']:
-                    shop_res = player.sell_item(item)
-                    time.sleep(shop_res['cooldown'])
-                    print(f'{shop_res}')
-
-                # get shops from DB to check if its already saved
-                shops = db.get_shops(db_id)
-                if next_room['room_id'] not in shops:
-                    db.update_shops(
-                        db_id, [next_room['room_id'], next_room["coordinates"]])
+            shop_check(next_room, player, db, db_id)
 
             # check for treasure
             treasure_check(next_room, player)
