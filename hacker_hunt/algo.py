@@ -99,6 +99,14 @@ def explore(player, db, db_id):
             # save next_room in DB
             db.insert_room(next_room)
 
+            # check if next room is a shop and save it in DB if it is
+            if next_room['title'] == 'Shop':
+                # get shops from DB to check if its already saved
+                shops = db.get_shops(db_id)
+                if next_room['room_id'] not in shops:
+                    db.update_shops(
+                        db_id, [next_room['room_id'], next_room["coordinates"]])
+
             # save next_room as direction of current_room to MAP in db
             # get map first
             game_map = db.get_map(db_id)
