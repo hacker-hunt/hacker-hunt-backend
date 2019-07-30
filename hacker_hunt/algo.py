@@ -48,7 +48,7 @@ def explore(player, db, db_id):
         print('Initializing first movement')
         # make first request from room 0
         init_room = player.initalize()
-
+        print(f'Game server response: {init_room}\n')
         # save room in db
         db.insert_room(init_room)
 
@@ -86,6 +86,7 @@ def explore(player, db, db_id):
                 f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
             # Make request for next movement
             next_room = player.move(current_room_dir)
+            print(f'Game server response: {next_room}\n')
             print(f"next room is {next_room['room_id']}")
             # save next_room in DB
             db.insert_room(next_room)
