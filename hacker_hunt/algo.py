@@ -4,6 +4,7 @@ from utils import Stack, Queue
 from room import Room
 
 
+# Update directions in map for both rooms
 def update_map(current_room, next_room, db, db_id):
     current_room_id = list(current_room.keys())[0]
     current_room_dir = current_room[current_room_id]
@@ -37,10 +38,9 @@ def update_map(current_room, next_room, db, db_id):
         game_map[next_room["room_id"]] = next_map_dir
         db.update_map(db_id, game_map)
 
+
 # start and target are both instances of Room Class
 # returns the path (list of room_id) from START to TARGET
-
-
 def traverse(start, target, db):
     que = Queue()
     # enqueue first room
@@ -77,7 +77,7 @@ def traverse(start, target, db):
     return None
 
 
-# player => instance of Player class to check if it's the first one
+# explore the map and save it in DB
 def explore(player, db, db_id):
     s = Stack()
     local_visited = set()
