@@ -83,6 +83,7 @@ class Player:
             headers=self.auth,
             json={"name": f"{item_name}"}
         )
+        return res.json()
 
     def examine_player(self, player_name):
         '''Examine player in the same room'''
@@ -91,6 +92,7 @@ class Player:
             headers=self.auth,
             json={"name": f"{player_name}"}
         )
+        return res.json()
 
     def change_name(self, new_name):
         '''Change player name at a name changer room'''
@@ -99,6 +101,7 @@ class Player:
             headers=self.auth,
             json={"name": f"{new_name}"}
         )
+        return res.json()
 
     def pray(self):
         '''Pray at a shrine to earn powers'''
@@ -106,6 +109,7 @@ class Player:
             f"{consts['path']}{consts['pray']}",
             headers=self.auth
         )
+        return res.json()
 
     def fly(self, direction):
         '''Use the flight power to move without penalty on elevated terrain'''
