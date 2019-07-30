@@ -1,4 +1,5 @@
 import time
+import sys
 
 from utils import Stack, Queue
 from player import get_status
@@ -197,6 +198,11 @@ def explore(player, db, db_id):
                 next_room = player.move(current_room_dir)
 
             print(f'Next room: {next_room}')
+
+            if next_room["room_id"] == 467:
+                print(f"FOUND Pirate Ry's. CHANGE NAME HERE")
+                sys.exit("FOUND Pirate Ry's. CHANGE NAME HERE")
+
             # save next_room in DB
             db.insert_room(next_room)
             # check if next room is a shop and save it in DB if it is
