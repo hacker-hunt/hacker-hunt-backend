@@ -102,12 +102,6 @@ def treasure_check(room, player, db, db_id):
 
             # if the player is carrying over 80% of his capacity, go to Shop at ID 1
             if player_capacity + examined_item['weight'] > 0.8*player_capacity:
-                # get shop ID
-                shops = db.get_shops(db_id)
-                # first shop (ID 1), first item from ID1 shop = ID
-                shop_id = shops[0][0]
-                # get shop room from DB
-                shop_room = db.get_room_by_id(shop_id)
                 # traverse there
                 shortest_path = find_nearest_shop(room, db, db_id)
                 traverse_path(shortest_path, player, db, db_id)
