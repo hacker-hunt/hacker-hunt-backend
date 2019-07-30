@@ -39,6 +39,26 @@ def update_map(current_room, next_room, db, db_id):
         db.update_map(db_id, game_map)
 
 
+# check for treasure and pick it up if you can
+def treasure_check(room, player):
+    print(f"Examining room for treasure and picking it up if I can")
+    if len(room['items']) > 0:
+        for item in room['items']:
+            # examine each treasure if you can pick it up
+            examined_item = player.examine_item(item)
+            # see if player have enough capacity to pick it up
+            player_capacity = player['strength'] - \
+                player['encumbrance']
+            if player_capacity > examined_item['weight']:
+                time.sleep(examined_item['cooldown'])
+                # pick it up
+                player.take_item(item)
+            else:
+                print(
+                    f"There was an item '{item}', which I could not pick up")
+                time.sleep(examined_item['cooldown'])
+
+
 # start and target are both instances of Room Class
 # returns the path (list of room_id) from START to TARGET
 def traverse(start, target, db):
@@ -143,19 +163,7 @@ def explore(player, db, db_id):
                         db_id, [next_room['room_id'], next_room["coordinates"]])
 
             # check for treasure
-            if len(next_room['items']) > 0:
-                for item in next_room['items']:
-                    # examine each treasure if you can pick it up
-                    examined_item = player.examine_item(item)
-                    # see if player have enough capacity to pick it up
-                    player_capacity = player['strength'] - \
-                        player['encumbrance']
-                    if player_capacity > examined_item['weight']:
-                        time.sleep(examined_item['cooldown'])
-                        # pick it up
-                        player.take_item(item)
-                    else:
-                        time.sleep(examined_item['cooldown'])
+            treasure_check(next_room, player)
 
             # update map with newly discovered directions
             update_map(current_room, next_room, db, db_id)
