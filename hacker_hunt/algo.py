@@ -226,6 +226,10 @@ def explore(player, db, db_id):
 
             # if we dont push any rooms to the stack, we hit dead end => start BFT
             if stack_before == stack_after:
+                # cooldown management
+                print('Going to sleep')
+                time.sleep(next_room["cooldown"])
+                print('Woke up\n')
                 # BFT will return shortest PATH to the next non-visited room
                 shortest_path = []
                 try:
