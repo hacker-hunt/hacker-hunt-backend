@@ -120,13 +120,14 @@ class Player:
         )
         return res.json()
 
-    def dash(self, next_rooms_list):
+    def dash(self, direction, num_of_rooms, next_rooms_string):
         '''Cover many rooms in one direction quickly'''
-        next_room_ids = ",".join([str(item) for item in next_rooms_list])
+        # next_room_ids = ",".join([str(item) for item in next_rooms_list])
         res = requests.post(
-            f"{consts['path']}{consts['fly']}",
+            f"{consts['path']}{consts['dash']}",
             headers=self.auth,
-            json={"direction": f"{next_room_ids}"}
+            json={"direction": str(direction), "num_rooms": str(
+                num_of_rooms), "next_room_ids": next_rooms_string}
         )
         return res.json()
 
@@ -139,3 +140,21 @@ def get_status():
         headers={"Authorization": f"Token {TOKEN}"}
     )
     return res.json()
+
+
+"""
+EXAMINE ITEM RESPONSE
+
+{
+    'name': 'tiny treasure',
+    'description': 'This is a tiny piece of treasure',
+    'weight': 1,
+    'itemtype': 'TREASURE',
+    'level': 1,
+    'exp': 0,
+    'attributes': '{}',
+    'cooldown': 15.0,
+    'errors': [],
+    'messages': []
+}
+"""
