@@ -6,8 +6,9 @@ from player import get_status
 
 # Update directions in map for both rooms
 def update_map(current_room, next_room, db, db_id):
-    current_room_id = list(current_room.keys())[0]
+    current_room_id = str(list(current_room.keys())[0])
     current_room_dir = current_room[current_room_id]
+    next_id = str(next_room["room_id"])
     # get map first
     game_map = db.get_map(db_id)
     obj = {"n": None, "s": None, "e": None, "w": None}
@@ -15,27 +16,27 @@ def update_map(current_room, next_room, db, db_id):
     if current_room_id in game_map:
         current_map_directions = game_map[current_room_id]
     else:
-        game_map[current_room_id] = obj
+        game_map[current_room_id] = obj.copy()
         current_map_directions = game_map[current_room_id]
 
     # update map
     # current room directions to next room
     if current_map_directions[current_room_dir] == None:
-        current_map_directions[current_room_dir] = next_room["room_id"]
+        current_map_directions[current_room_dir] = next_id
         # next room directions to current room
-        if next_room["room_id"] in game_map:
-            next_map_dir = game_map[next_room["room_id"]]
+        if next_id in game_map:
+            next_map_dir = game_map[next_id]
         else:
-            game_map[next_room["room_id"]] = obj
-            next_map_dir = game_map[next_room["room_id"]]
+            game_map[next_id] = obj.copy()
+            next_map_dir = game_map[next_id]
 
         oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
         # if (0, 'n') = 1, then (1, 's') must be equal to 0
-        next_map_dir[oposite_directions[current_map_directions]
+        next_map_dir[oposite_directions[current_room_dir]
                      ] = current_room_id
         # update map in db
         game_map[current_room_id] = current_map_directions
-        game_map[next_room["room_id"]] = next_map_dir
+        game_map[next_id] = next_map_dir
         db.update_map(db_id, game_map)
 
 
@@ -71,19 +72,25 @@ def treasure_check(room, player):
 
 # check if room is a shop. save it in DB and sell items if yes
 def shop_check(room, player, db, db_id):
+    print(f"PLAYER: {player['inventory']}")
     if room['title'] == 'Shop':
-        # sell treasures
-        for item in player['inventory']:
-            shop_res = player.sell_item(item)
-            time.sleep(shop_res['cooldown'])
-            print(f'{shop_res}')
+        if len(player['inventory']) > 0:
+            # sell treasures
+            for item in player['inventory']:
+                shop_res = player.sell_item(item)
+                time.sleep(shop_res['cooldown'])
+                print(f'{shop_res}')
 
         # get shops from DB to check if its already saved
         shops = db.get_shops(db_id)
-        for shop in shops:
-            if room['room_id'] not in shop[0]:
-                db.update_shops(
-                    db_id, [room['room_id'], room["coordinates"]])
+        if len(shops) > 0:
+            for shop in shops:
+                if room['room_id'] not in shop[0]:
+                    db.update_shops(
+                        db_id, [room['room_id'], room["coordinates"]])
+        else:
+            db.update_shops(
+                        db_id, [room['room_id'], room["coordinates"]])
 
 
 # start and target are both instances of Room Class
@@ -173,11 +180,14 @@ def explore(player, db, db_id):
                 f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
             # Make request for next movement
             global_map = db.get_map(db_id)
+
+            if current_room_id not in global_map:
+                global_map[current_room_id] = {"n": None, "s": None, "e": None, "w": None}
             cur_room_dirs = global_map[current_room_id]
             # check whether the next dir exists on the db map
             if cur_room_dirs[current_room_dir] is not None:
                 next_room = player.wise_explore(current_room_dir, cur_room_dirs[current_room_dir])
-            else: 
+            else:
                 # otherwise just use move
                 next_room = player.move(current_room_dir)
 
@@ -198,11 +208,14 @@ def explore(player, db, db_id):
 
             # add exits from next_room to stack and que
             for direction in next_room["exits"]:
-                n_dict = {str(next_room["room_id"]): direction}
-                global_visited = db.get_visited(db_id)
-                if next_room["room_id"] not in local_visited and n_dict not in global_visited:
-                    s.push(n_dict)
-                    db.update_que(db_id, n_dict)
+                # check if the direction is the return direction
+                oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
+                if oposite_directions[direction] != current_room_dir:
+                    n_dict = {str(next_room["room_id"]): direction}
+                    global_visited = db.get_visited(db_id)
+                    if next_room["room_id"] not in local_visited and n_dict not in global_visited:
+                        s.push(n_dict)
+                        db.update_que(db_id, n_dict)
             print(f"stack: {s.stack}")
             print(f"que: {db.get_que(db_id)}")
             stack_after = s.size()
@@ -236,7 +249,7 @@ def explore(player, db, db_id):
 
                         shortest_path = traverse(
                             start, target, db)
-                    
+
                     # for each room in shortest_path do a wise-explore request
                     # handle the start case
                     global_map = db.get_map(db_id)
@@ -251,7 +264,7 @@ def explore(player, db, db_id):
                     second_room = player.wise_explore(next_direction, next_room_id)
                     # do cooldown in between each loop
                     time.sleep(second_room["cooldown"])
-                
+
                     for idx, room_id in enumerate(shortest_path):
                         # initialize destination variable
                         destination_id = ""
@@ -261,7 +274,7 @@ def explore(player, db, db_id):
                         # check to see if it's the last room in the list
                         if idx < (len(shortest_path) - 1):
                             # get next room in list
-                            destination_id = shortest_path[i+1]
+                            destination_id = shortest_path[idx+1]
                             # find dir to destination
                             for direction, room_id in origin:
                                 if room_id == destination_id:
@@ -280,3 +293,5 @@ def explore(player, db, db_id):
             print('Going to sleep')
             time.sleep(next_room["cooldown"])
             print('Woke up\n')
+        else:
+            print(f"cr_id: {current_room_id} in {local_visited}\n{current_room} in {global_visited}")
