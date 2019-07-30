@@ -238,32 +238,38 @@ def explore(player, db, db_id):
                             start, target, db)
                     
                     # for each room in shortest_path do a wise-explore request
+                    # handle the start case
+                    global_map = db.get_map(db_id)
+                    start = global_map[current_room_id]
+                    # find the idx 0 from shortest_path
+                    next_room_id = shortest_path[0]
+                    next_direction = ""
+                    for direction, room_id in start:
+                        if room_id == next_room_id:
+                            next_direction = direction
+                    # make wise explore request
+                    second_room = player.wise_explore(next_direction, next_room_id)
+                    # do cooldown in between each loop
+                    time.sleep(second_room["cooldown"])
+                
                     for idx, room_id in enumerate(shortest_path):
                         # initialize destination variable
                         destination_id = ""
                         # get instance of room class
-                        origin = db.get_room_by_id(room_id)
+                        global_map = db.get_map(db_id)
+                        origin = global_map[room_id]
                         # check to see if it's the last room in the list
-                        if idx < (len(rooms) - 1):
+                        if idx < (len(shortest_path) - 1):
                             # get next room in list
                             destination_id = shortest_path[i+1]
-                        else:
-                            # go to target room
-                            destination_id = target["room_id"]
-                        # find dir to destination
-                        dir_to_destination = ""
-                        if origin["n_to"]["room_id"] == destination_id:
-                            dir_to_destination = "n"
-                        elif origin["s_to"]["room_id"] == destination_id:
-                            dir_to_destination = "s"
-                        elif origin["e_to"]["room_id"] == destination_id:
-                            dir_to_destination = "e"
-                        elif origin["w_to"]["room_id"] == destination_id:
-                            dir_to_destination = "w"
-                        # make wise explore request
-                        destination_room = player.wise_explore(dir_to_destination, destination_id)
-                        # do cooldown in between each loop
-                        time.sleep(destination_room["cooldown"])
+                            # find dir to destination
+                            for direction, room_id in origin:
+                                if room_id == destination_id:
+                                    next_direction = direction
+                            # make wise explore request
+                            destination_room = player.wise_explore(next_direction, destination_id)
+                            # do cooldown in between each loop
+                            time.sleep(destination_room["cooldown"])
 
                     print(f"Path from traverse: {shortest_path}")
 
