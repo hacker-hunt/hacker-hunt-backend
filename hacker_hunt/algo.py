@@ -4,8 +4,43 @@ from utils import Stack, Queue
 from room import Room
 
 
+def update_map(current_room, next_room, db, db_id):
+    current_room_id = list(current_room.keys())[0]
+    current_room_dir = current_room[current_room_id]
+    # get map first
+    game_map = db.get_map(db_id)
+    obj = {"n": None, "s": None, "e": None, "w": None}
+    # saves object of current room directions
+    if current_room_id in game_map:
+        current_map_directions = game_map[current_room_id]
+    else:
+        game_map[current_room_id] = obj
+        current_map_directions = game_map[current_room_id]
+
+    # update map
+    # current room directions to next room
+    if current_map_directions[current_room_dir] == None:
+        current_map_directions[current_room_dir] = next_room["room_id"]
+        # next room directions to current room
+        if next_room["room_id"] in game_map:
+            next_map_dir = game_map[next_room["room_id"]]
+        else:
+            game_map[next_room["room_id"]] = obj
+            next_map_dir = game_map[next_room["room_id"]]
+
+        oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
+        # if (0, 'n') = 1, then (1, 's') must be equal to 0
+        next_map_dir[oposite_directions[current_map_directions]
+                     ] = current_room_id
+        # update map in db
+        game_map[current_room_id] = current_map_directions
+        game_map[next_room["room_id"]] = next_map_dir
+        db.update_map(db_id, game_map)
+
 # start and target are both instances of Room Class
 # returns the path (list of room_id) from START to TARGET
+
+
 def traverse(start, target, db):
     que = Queue()
     # enqueue first room
@@ -107,42 +142,8 @@ def explore(player, db, db_id):
                     db.update_shops(
                         db_id, [next_room['room_id'], next_room["coordinates"]])
 
-            # save next_room as direction of current_room to MAP in db
-            # get map first
-            game_map = db.get_map(db_id)
-            obj = {"n": None, "s": None, "e": None, "w": None}
-            # saves object of current room directions
-            if current_room_id in game_map:
-                current_map_directions = game_map[current_room_id]
-            else:
-                game_map[current_room_id] = obj
-                current_map_directions = game_map[current_room_id]
-
-            # update map
-            # current room directions to next room
-            if current_map_directions[current_room_dir] == None:
-                current_map_directions[current_room_dir] = next_room["room_id"]
-                # next room directions to current room
-                if next_room["room_id"] in game_map:
-                    next_map_dir = game_map[next_room["room_id"]]
-                else:
-                    game_map[next_room["room_id"]] = obj
-                    next_map_dir = game_map[next_room["room_id"]]
-
-                if current_map_directions == "n":
-                    dir_to_curr_room = "s"
-                elif current_map_directions == "s":
-                    dir_to_curr_room = "n"
-                elif current_map_directions == "e":
-                    dir_to_curr_room = "w"
-                else:
-                    dir_to_curr_room = "e"
-
-                next_map_dir[dir_to_curr_room] = current_room_id
-                # update map in db
-                game_map[current_room_id] = current_map_directions
-                game_map[next_room["room_id"]] = next_map_dir
-                db.update_map(db_id, game_map)
+            # update map with newly discovered directions
+            update_map(current_room, next_room, db, db_id)
 
             stack_before = s.size()
 
