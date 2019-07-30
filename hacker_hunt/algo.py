@@ -44,14 +44,18 @@ def update_map(current_room, next_room, db, db_id):
 def treasure_check(room, player):
     print(f"Examining room for treasure and picking it up if I can")
     if len(room['items']) > 0:
+        print('Waiting for CD before picking up items')
+        time.sleep(room["cooldown"])
         for item in room['items']:
             # examine each treasure if you can pick it up
             examined_item = player.examine_item(item)
+            print(f"Examined item: {examined_item}")
             # wait for cooldown before picking it up
             time.sleep(examined_item['cooldown'])
 
             # get the latest player status
             status = get_status()
+            print(f"Player status: {status}")
             time.sleep(status['cooldown'])
             player.update_player(status)
 
@@ -77,6 +81,8 @@ def shop_check(room, player, db, db_id):
     print(f"Player inventory: {player['inventory']}")
     if room['title'] == 'Shop':
         if len(player['inventory']) > 0:
+            print('Waiting for CD before selling items')
+            time.sleep(room["cooldown"])
             # sell treasures
             for item in player['inventory']:
                 shop_res = player.sell_item(item)
@@ -286,7 +292,6 @@ def explore(player, db, db_id):
                             destination_id = shortest_path[idx+1]
                             # find dir to destination
                             for direction, room_id in origin.items():
-                                # TODO KEYERROR for NONE values... can not be int(None)
                                 if room_id and int(room_id) == destination_id:
                                     next_direction = direction
 
