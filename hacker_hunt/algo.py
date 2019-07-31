@@ -220,9 +220,25 @@ def explore(player, db, db_id):
         time.sleep(init_room["cooldown"])
     else:
         start_room = player.initalize()
+        cr = start_room
+        # get stack from db
+        db_stack = db.get_stack(player)
+        # pop last item as target
+        # if the players DB stack is empty
+        if db_stack:
+            target = db_stack["stack"].pop()
+            target_id = list(target.keys())[0]
+            target_room = db.get_room_by_id(target_id)
+            # traverse there
+            shortest_path = traverse(start_room, target_room, db)
+            traverse_path(shortest_path, player, db, db_id)
+            cr = target_room
+        # add all exits to stack
+        # continue
+
         # add exit rooms from starting room to local stack and global que
-        for direction in start_room["exits"]:
-            s.push({str(start_room["room_id"]): direction})
+        for direction in cr["exits"]:
+            s.push({str(cr["room_id"]): direction})
         # update stack on db
         db.update_stack(player, s.get_stack())
 
@@ -278,8 +294,13 @@ def explore(player, db, db_id):
             treasure_check(next_room, player, db, db_id)
 
             if next_room["room_id"] == 467:
-                print(f"FOUND Pirate Ry's. CHANGE NAME HERE")
-                sys.exit("FOUND Pirate Ry's. CHANGE NAME HERE")
+                print(f"Found Pirate Ry's name changer")
+                names = {"player55": "pavol", "player52": "diana", "player54": "markm", "player53": "talent antonio"}
+
+                if player["name"] in names:
+                    res = player.change_name(names[player["name"]])
+                    print(f"Changed name: {res}")
+
 
             stack_before = s.size()
 

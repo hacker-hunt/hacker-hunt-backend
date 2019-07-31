@@ -151,3 +151,8 @@ class Database:
         else:
             new_stack = {"$set": {"stack": stack}}
             self.stacks.update_one({"player_name": player["name"]}, new_stack)
+
+    def get_stack(self, player):
+        query = {"player_name": player["name"]}
+        stack_data = self.stacks.find_one(query)
+        return stack_data
