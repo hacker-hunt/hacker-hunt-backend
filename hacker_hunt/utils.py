@@ -49,3 +49,6 @@ class Stack():
 
     def get_stack(self):
         return self.stack
+
+    def replace_stack(self, new_stack):
+        self.stack = new_stack
