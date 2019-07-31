@@ -102,7 +102,7 @@ class Player:
         res = requests.post(
             f"{consts['path']}{consts['change_name']}",
             headers=self.auth,
-            json={"name": f"{new_name}"}
+            json={"name": f"{new_name}", "confirm": "aye"}
         )
         return res.json()
 
