@@ -67,6 +67,16 @@ def traverse_path(shortest_path, player, db, db_id):
             time.sleep(destination_room["cooldown"])
 
 
+# traverse from current player room to target room
+def traverse_player_to_target(player, target_id, db, db_id):
+    if target_id != None:
+        start_room = player.initalize()
+        time.sleep(start_room['cooldown'])
+        target_room = db.get_room_by_id(int(target_id))
+        path = traverse(start_room, target_room, db)
+        traverse_path(path, player, db, db_id)
+
+
 # check for treasure and pick it up if you can
 def treasure_check(room, player, db, db_id):
     print(f"Examining room for treasure and picking it up if I can")
@@ -180,6 +190,7 @@ def traverse(start, target, db):
 
             if cr_id == target["room_id"]:
                 current_room["path"].append(cr_id)
+                print(f"Returning on this path: {current_room['path']}")
                 return current_room["path"]
 
             db_id = db.get_id()
@@ -304,6 +315,7 @@ def explore(player, db, db_id):
             # check for treasure
             treasure_check(next_room, player, db, db_id)
 
+            # change name room
             if next_room["room_id"] == 467:
                 print(f"Found Pirate Ry's name changer")
                 # cooldown management
@@ -314,6 +326,16 @@ def explore(player, db, db_id):
                 if player["name"] in names:
                     res = player.change_name(names[player["name"]])
                     print(f"Changed name: {res}")
+
+            # shrine room
+            if next_room["room_id"] == 22:
+                print("Found Shrine!")
+                # cooldown management
+                print('Going to sleep\n')
+                time.sleep(next_room["cooldown"])
+
+                i_pray = player.pray()
+                print(f"You prayed at the shrine: {i_pray}")
 
 
             stack_before = s.size()
