@@ -278,8 +278,13 @@ def explore(player, db, db_id):
             treasure_check(next_room, player, db, db_id)
 
             if next_room["room_id"] == 467:
-                print(f"FOUND Pirate Ry's. CHANGE NAME HERE")
-                sys.exit("FOUND Pirate Ry's. CHANGE NAME HERE")
+                print(f"Found Pirate Ry's name changer")
+                names = {"player55": "pavol", "player52": "diana", "player54": "markm", "player53": "talent antonio"}
+
+                if player["name"] in names:
+                    res = player.change_name(names[player["name"]])
+                    print(f"Changed name: {res}")
+
 
             stack_before = s.size()
 
