@@ -83,7 +83,7 @@ class Database:
         # get ID of item added to DB
         room_id = room_result.inserted_id
 
-        print(f'Created new room: {room["room_id"]} in DB')
+        # print(f'Created new room: {room["room_id"]} in DB')
         return room_id
 
     def get_room_by_id(self, id):
@@ -105,3 +105,27 @@ class Database:
         b.append(shop)
         new_a = {"$set": {"shops": b}}
         self.data.update_one({"_id": id}, new_a)
+
+    def download_data(self, id):
+        query = {"_id": id}
+        data = self.data.find_one(query)
+        data["visited"] = []
+        data["global_que"] = []
+        return data
+
+    def download_rooms(self):
+        data = self.rooms.find({})
+        return data
+
+    def upload_data_to_atlas(self, data):
+        data_result = self.data.insert_one(data)
+
+        # get ID of item added to DB
+        item_id = data_result.inserted_id
+
+        print(f'Created new visited list, global queue and map: {item_id}')
+        return item_id
+
+    def upload_rooms_to_atlas(self, rooms):
+        data_result = self.rooms.insert_many(rooms)
+        return data_result

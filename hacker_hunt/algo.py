@@ -1,4 +1,5 @@
 import time
+import sys
 
 from utils import Stack, Queue
 from player import get_status
@@ -40,57 +41,119 @@ def update_map(current_room, next_room, db, db_id):
         db.update_map(db_id, game_map)
 
 
+# traverse shortest path
+def traverse_path(shortest_path, player, db, db_id):
+    for idx, room_id in enumerate(shortest_path):
+        # initialize destination variable
+        destination_id = ""
+        # get instance of room class
+        global_map = db.get_map(db_id)
+        origin = global_map[str(room_id)]
+
+        # check to see if it's the last room in the list
+        if idx < (len(shortest_path) - 1):
+            # get next room in list
+            destination_id = shortest_path[idx+1]
+            # find dir to destination
+            for direction, room_id in origin.items():
+                if room_id and int(room_id) == destination_id:
+                    next_direction = direction
+
+            # make wise explore request
+            destination_room = player.wise_explore(
+                next_direction, destination_id)
+            print(f'destination room: {destination_room}')
+            # do cooldown in between each loop
+            time.sleep(destination_room["cooldown"])
+
+
 # check for treasure and pick it up if you can
-def treasure_check(room, player):
+def treasure_check(room, player, db, db_id):
     print(f"Examining room for treasure and picking it up if I can")
     if len(room['items']) > 0:
+        print('Waiting for CD before picking up items')
+        time.sleep(room["cooldown"])
         for item in room['items']:
             # examine each treasure if you can pick it up
             examined_item = player.examine_item(item)
+            print(f"Examined item: {examined_item}")
             # wait for cooldown before picking it up
             time.sleep(examined_item['cooldown'])
 
             # get the latest player status
             status = get_status()
+            print(f"Player status: {status}")
             time.sleep(status['cooldown'])
             player.update_player(status)
 
             # see if player have enough capacity to pick it up
             player_capacity = player['strength'] - \
                 player['encumbrance']
-            print(f'Examining item: {examined_item}')
+
             if player_capacity > examined_item['weight']:
                 # pick it up
                 res = player.take_item(item)
-                print(f'Picked up an item: {res}')
+                print(f'*** Picked up an item: {res} ***')
                 # wait for cooldown before moving on
                 time.sleep(res['cooldown'])
             else:
                 print(
                     f"There was an item '{item}', which I could not pick up")
 
+            # if the player is carrying over 80% of his capacity, go to Shop at ID 1
+            if player_capacity + examined_item['weight'] > 0.8*player_capacity:
+                # traverse there
+                shortest_path = find_nearest_shop(room, db, db_id)
+                traverse_path(shortest_path, player, db, db_id)
+
+    else:
+        print('Nothing to pick up here')
+
 
 # check if room is a shop. save it in DB and sell items if yes
 def shop_check(room, player, db, db_id):
-    print(f"PLAYER: {player['inventory']}")
+    print(f"Player inventory: {player['inventory']}")
     if room['title'] == 'Shop':
         if len(player['inventory']) > 0:
+            print('Waiting for CD before selling items')
+            time.sleep(room["cooldown"])
             # sell treasures
             for item in player['inventory']:
                 shop_res = player.sell_item(item)
                 time.sleep(shop_res['cooldown'])
-                print(f'{shop_res}')
+                print(f'*** Sold item: {shop_res} ***')
 
         # get shops from DB to check if its already saved
         shops = db.get_shops(db_id)
         if len(shops) > 0:
             for shop in shops:
-                if room['room_id'] not in shop[0]:
+                if room['room_id'] != shop[0]:
                     db.update_shops(
                         db_id, [room['room_id'], room["coordinates"]])
         else:
             db.update_shops(
-                        db_id, [room['room_id'], room["coordinates"]])
+                db_id, [room['room_id'], room["coordinates"]])
+
+
+# find nearest shop
+# run traverse for every current_room - shop pair
+# and return the shortest
+def find_nearest_shop(room, db, db_id):
+    # get shops from DB
+    shops = db.get_shops(db_id)
+    shortest_path_len = 100000
+    shortest_path = None
+    if len(shops) > 0:
+        for shop in shops:
+            # get shop ID
+            shop_id = shop[0]
+            shop_room = db.get_room_by_id(shop_id)
+            path = traverse(room, shop_room, db)
+
+            if len(path) < shortest_path_len:
+                shortest_path = path
+
+    return shortest_path
 
 
 # start and target are both instances of Room Class
@@ -106,7 +169,7 @@ def traverse(start, target, db):
         cr_id = current_room["node"]["room_id"]
         if cr_id not in visited:
             visited.add(cr_id)
-            print(f'Currently in {cr_id}')
+
             if cr_id == target["room_id"]:
                 current_room["path"].append(cr_id)
                 return current_room["path"]
@@ -114,7 +177,7 @@ def traverse(start, target, db):
             db_id = db.get_id()
             game_map = db.get_map(db_id)
             # add all neighbouring nodes to queue
-            for direction in current_room["node"].get_exits():
+            for direction in current_room["node"]["exits"]:
                 # get ID of the room, that is in direction
                 room_in_direction_id = game_map[str(cr_id)][direction]
                 # grab that room from DB
@@ -141,7 +204,7 @@ def explore(player, db, db_id):
         print('Initializing first movement')
         # make first request from room 0
         init_room = player.initalize()
-        print(f'Game server response: {init_room}\n')
+        print(f'initial room: {init_room}')
         # save room in db
         db.insert_room(init_room)
 
@@ -149,17 +212,22 @@ def explore(player, db, db_id):
         for direction in init_room["exits"]:
             s.push({str(init_room["room_id"]): direction})
             db.update_que(db_id, {str(init_room["room_id"]): direction})
-        print(f"stack: {s.stack}")
-        print(f"que: {db.get_que(db_id)}")
 
         # cooldown management
         print('Going to sleep')
         time.sleep(init_room["cooldown"])
-        print('Woke up')
+    else:
+        start_room = player.initalize()
+        # add exit rooms from starting room to local stack and global que
+        for direction in start_room["exits"]:
+            s.push({str(start_room["room_id"]): direction})
+
+        # cooldown management
+        print('Going to sleep')
+        time.sleep(start_room["cooldown"])
     # STOP conditon == empty local stack and global que
     while s.size() > 0 or len(db.get_que(db_id)):
-        print(
-            f'Running while loop. stack: {s.size()}, que: {len(db.get_que(db_id))}')
+
         # first empty local stack
         if s.size() > 0:
             current_room = s.pop()
@@ -171,38 +239,43 @@ def explore(player, db, db_id):
         current_room_id = list(current_room.keys())[0]
         current_room_dir = current_room[current_room_id]
         print(
-            f'Currently in room {current_room_id} moving to {current_room_dir}')
+            f'### Currently in room {current_room_id} moving to {current_room_dir} ###')
         global_visited = db.get_visited(db_id)
-        if current_room_id not in local_visited and current_room not in global_visited:
+        if current_room_id not in local_visited or current_room not in global_visited:
             local_visited.add(current_room_id)
             db.update_visited(db_id, current_room)
-            print(
-                f"global_visited rooms : {db.get_visited(db_id)}\nlocal_visited: {local_visited}")
+
             # Make request for next movement
             global_map = db.get_map(db_id)
 
             if current_room_id not in global_map:
-                global_map[current_room_id] = {"n": None, "s": None, "e": None, "w": None}
+                global_map[current_room_id] = {
+                    "n": None, "s": None, "e": None, "w": None}
             cur_room_dirs = global_map[current_room_id]
             # check whether the next dir exists on the db map
             if cur_room_dirs[current_room_dir] is not None:
-                next_room = player.wise_explore(current_room_dir, cur_room_dirs[current_room_dir])
+                next_room = player.wise_explore(
+                    current_room_dir, cur_room_dirs[current_room_dir])
             else:
                 # otherwise just use move
                 next_room = player.move(current_room_dir)
 
-            print(f'Game server response: {next_room}\n')
-            print(f"next room is {next_room['room_id']}")
+            print(f'Next room: {next_room}')
+
+            # update map with newly discovered directions
+            update_map(current_room, next_room, db, db_id)
+
             # save next_room in DB
             db.insert_room(next_room)
             # check if next room is a shop and save it in DB if it is
             shop_check(next_room, player, db, db_id)
 
             # check for treasure
-            treasure_check(next_room, player)
+            treasure_check(next_room, player, db, db_id)
 
-            # update map with newly discovered directions
-            update_map(current_room, next_room, db, db_id)
+            if next_room["room_id"] == 467:
+                print(f"FOUND Pirate Ry's. CHANGE NAME HERE")
+                sys.exit("FOUND Pirate Ry's. CHANGE NAME HERE")
 
             stack_before = s.size()
 
@@ -216,24 +289,26 @@ def explore(player, db, db_id):
                     if next_room["room_id"] not in local_visited and n_dict not in global_visited:
                         s.push(n_dict)
                         db.update_que(db_id, n_dict)
-            print(f"stack: {s.stack}")
-            print(f"que: {db.get_que(db_id)}")
+
             stack_after = s.size()
 
             # if we dont push any rooms to the stack, we hit dead end => start BFT
             if stack_before == stack_after:
+                # cooldown management
+                print('Going to sleep')
+                time.sleep(next_room["cooldown"])
+
                 # BFT will return shortest PATH to the next non-visited room
                 shortest_path = []
                 try:
                     # if current_room_id == s.stack[-1].id (you hit a dead end in looped nodes(cyclic graph))
                     # take s.stack[-2].id as TARGET if it exist
                     # if it doesnt (means the stack is empty) you are finished
-                    if current_room_id == list(s.stack[-1].keys())[0]:
+                    if next_room["room_id"] == list(s.stack[-1].keys())[0]:
                         # BFS entry and target nodes:
                         # both have to be instances of Room class
-
                         # get rooms from DB by their ID
-                        start = db.get_room_by_id(current_room_id)
+                        start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(
                             list(s.stack[-2].keys())[0])
 
@@ -243,55 +318,22 @@ def explore(player, db, db_id):
                     else:
                         # BFS entry and target nodes:
                         # get room from DB by its ID
-                        start = db.get_room_by_id(current_room_id)
+                        start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(
                             list(s.stack[-1].keys())[0])
 
                         shortest_path = traverse(
                             start, target, db)
 
-                    # for each room in shortest_path do a wise-explore request
-                    # handle the start case
-                    global_map = db.get_map(db_id)
-                    start = global_map[current_room_id]
-                    # find the idx 0 from shortest_path
-                    next_room_id = shortest_path[0]
-                    next_direction = ""
-                    for direction, room_id in start:
-                        if room_id == next_room_id:
-                            next_direction = direction
-                    # make wise explore request
-                    second_room = player.wise_explore(next_direction, next_room_id)
-                    # do cooldown in between each loop
-                    time.sleep(second_room["cooldown"])
-
-                    for idx, room_id in enumerate(shortest_path):
-                        # initialize destination variable
-                        destination_id = ""
-                        # get instance of room class
-                        global_map = db.get_map(db_id)
-                        origin = global_map[room_id]
-                        # check to see if it's the last room in the list
-                        if idx < (len(shortest_path) - 1):
-                            # get next room in list
-                            destination_id = shortest_path[idx+1]
-                            # find dir to destination
-                            for direction, room_id in origin:
-                                if room_id == destination_id:
-                                    next_direction = direction
-                            # make wise explore request
-                            destination_room = player.wise_explore(next_direction, destination_id)
-                            # do cooldown in between each loop
-                            time.sleep(destination_room["cooldown"])
-
-                    print(f"Path from traverse: {shortest_path}")
+                    traverse_path(shortest_path, player, db, db_id)
 
                 except IndexError:
                     print('We are done!')
+            else:
+                # cooldown management
+                print('Going to sleep\n')
+                time.sleep(next_room["cooldown"])
 
-            # cooldown management
-            print('Going to sleep')
-            time.sleep(next_room["cooldown"])
-            print('Woke up\n')
         else:
-            print(f"cr_id: {current_room_id} in {local_visited}\n{current_room} in {global_visited}")
+            print(
+                f"cr_id: {current_room_id} in {local_visited}\n{current_room} in {global_visited}")
