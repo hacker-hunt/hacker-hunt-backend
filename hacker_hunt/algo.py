@@ -229,9 +229,11 @@ def explore(player, db, db_id):
             target = db_stack["stack"].pop()
             target_id = list(target.keys())[0]
             target_room = db.get_room_by_id(target_id)
-            # traverse there
-            shortest_path = traverse(start_room, target_room, db)
-            traverse_path(shortest_path, player, db, db_id)
+
+            if target_room["room_id"] != start_room["room_id"]:
+                # traverse there
+                shortest_path = traverse(start_room, target_room, db)
+                traverse_path(shortest_path, player, db, db_id)
             cr = target_room
         # add all exits to stack
         # continue
@@ -295,6 +297,9 @@ def explore(player, db, db_id):
 
             if next_room["room_id"] == 467:
                 print(f"Found Pirate Ry's name changer")
+                # cooldown management
+                print('Going to sleep\n')
+                time.sleep(next_room["cooldown"])
                 names = {"player55": "pavol", "player52": "diana", "player54": "markm", "player53": "talent antonio"}
 
                 if player["name"] in names:
