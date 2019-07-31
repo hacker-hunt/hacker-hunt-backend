@@ -73,38 +73,58 @@ def treasure_check(room, player, db, db_id):
     if len(room['items']) > 0:
         print('Waiting for CD before picking up items')
         time.sleep(room["cooldown"])
-        for item in room['items']:
-            # examine each treasure if you can pick it up
-            examined_item = player.examine_item(item)
-            print(f"Examined item: {examined_item}")
-            # wait for cooldown before picking it up
-            time.sleep(examined_item['cooldown'])
 
-            # get the latest player status
-            status = get_status()
-            print(f"Player status: {status}")
-            time.sleep(status['cooldown'])
-            player.update_player(status)
+        # get the latest player status
+        status = get_status()
+        print(f"Player status: {status}")
+        time.sleep(status['cooldown'])
+        player.update_player(status)
 
-            # see if player have enough capacity to pick it up
-            player_capacity = player['strength'] - \
-                player['encumbrance']
+        # see if player have enough capacity to pick it up
+        player_capacity = player['strength'] - \
+            player['encumbrance']
 
-            if player_capacity > examined_item['weight']:
-                # pick it up
-                res = player.take_item(item)
-                print(f'*** Picked up an item: {res} ***')
-                # wait for cooldown before moving on
-                time.sleep(res['cooldown'])
-            else:
-                print(
-                    f"There was an item '{item}', which I could not pick up")
+        if player_capacity > 1:
+            for item in room['items']:
+                # examine each treasure if you can pick it up
+                examined_item = player.examine_item(item)
+                print(f"Examined item: {examined_item}")
+                # wait for cooldown before picking it up
+                time.sleep(examined_item['cooldown'])
 
-            # if the player is carrying over 80% of his capacity, go to Shop at ID 1
-            if player_capacity - examined_item['weight'] > 0.8*player_capacity:
-                # traverse there
-                shortest_path = find_nearest_shop(room, db, db_id)
-                traverse_path(shortest_path, player, db, db_id)
+                if player_capacity > examined_item['weight']:
+                    # pick it up
+                    res = player.take_item(item)
+                    print(f'*** Picked up an item: {res} ***')
+                    # wait for cooldown before moving on
+                    time.sleep(res['cooldown'])
+
+                    # get the latest player status
+                    status = get_status()
+                    print(f"Player status: {status}")
+                    time.sleep(status['cooldown'])
+                    player.update_player(status)
+
+                    # see if player have enough capacity to pick it up
+                    player_capacity = player['strength'] - \
+                        player['encumbrance']
+                else:
+                    print(
+                        f"There was an item '{item}', which I could not pick up")
+
+        # if the player is carrying over 90% of his strength, go to Shop
+        if player['encumbrance'] >= 0.9*player['strength']:
+            # traverse there
+            shortest_path = find_nearest_shop(room, db, db_id)
+            traverse_path(shortest_path, player, db, db_id)
+            # get shop room
+            shop_room = db.get_room_by_id(1)
+            # sell items
+            shop_check(shop_room, player, db, db_id)
+            # get path back => reversed shortest_path
+            shortest_path.reverse()
+            # traverse back to current room
+            traverse_path(shortest_path, player, db, db_id)
 
     else:
         print('Nothing to pick up here')
@@ -139,21 +159,9 @@ def shop_check(room, player, db, db_id):
 # run traverse for every current_room - shop pair
 # and return the shortest
 def find_nearest_shop(room, db, db_id):
-    # get shops from DB
-    shops = db.get_shops(db_id)
-    shortest_path_len = 100000
-    shortest_path = None
-    if len(shops) > 0:
-        for shop in shops:
-            # get shop ID
-            shop_id = shop[0]
-            shop_room = db.get_room_by_id(shop_id)
-            path = traverse(room, shop_room, db)
-
-            if len(path) < shortest_path_len:
-                shortest_path = path
-
-    return shortest_path
+    shop_room = db.get_room_by_id(1)
+    path = traverse(room, shop_room, db)
+    return path
 
 
 # start and target are both instances of Room Class
@@ -180,15 +188,16 @@ def traverse(start, target, db):
             for direction in current_room["node"]["exits"]:
                 # get ID of the room, that is in direction
                 room_in_direction_id = game_map[str(cr_id)][direction]
-                # grab that room from DB
-                room = db.get_room_by_id(room_in_direction_id)
+                if room_in_direction_id != None:
+                    # grab that room from DB
+                    room = db.get_room_by_id(room_in_direction_id)
 
-                # Make a COPY of the PATH set from current node to neighbour nodes
-                path_to_neighbour = current_room["path"].copy()
-                path_to_neighbour.append(cr_id)
+                    # Make a COPY of the PATH set from current node to neighbour nodes
+                    path_to_neighbour = current_room["path"].copy()
+                    path_to_neighbour.append(cr_id)
 
-                que.enqueue(
-                    {"node": room, "path": path_to_neighbour})
+                    que.enqueue(
+                        {"node": room, "path": path_to_neighbour})
 
         que.dequeue()
     return None
@@ -225,7 +234,7 @@ def explore(player, db, db_id):
         db_stack = db.get_stack(player)
         # pop last item as target
         # if the players DB stack is empty
-        if db_stack:
+        if len(db_stack["stack"]) > 0:
             target = db_stack["stack"].pop()
             target_id = list(target.keys())[0]
             target_room = db.get_room_by_id(target_id)
