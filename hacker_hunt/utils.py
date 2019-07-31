@@ -10,7 +10,8 @@ consts = {
     'change_name': 'change_name/',
     'pray': 'pray/',
     'fly': 'fly/',
-    'dash': 'dash/'
+    'dash': 'dash/',
+    'change_name': 'change_name/'
 }
 
 
