@@ -11,6 +11,8 @@ class Database:
         self.data = self.db.data
         # create colelction 'rooms' that contains instances of Room class
         self.rooms = self.db.rooms
+        # create colelction 'stacks' that contains copies of local stack for each player
+        self.stacks = self.db.stacks
 
     def insert_to_db(self):
         # add item to DB
@@ -129,3 +131,23 @@ class Database:
     def upload_rooms_to_atlas(self, rooms):
         data_result = self.rooms.insert_many(rooms)
         return data_result
+
+    def first_stack_insert(self, player, stack):
+        obj = {"player_name": player["name"], "stack": stack}
+        # add stack to DB
+        stack_result = self.stacks.insert_one(obj)
+
+        # get ID of item added to DB
+        stack_id = stack_result.inserted_id
+
+        # print(f'Created new stack: {stack["stack_id"]} in DB')
+        return stack_id
+
+    def update_stack(self, player, stack):
+        query = {"player_name": player["name"]}
+        stack_data = self.stacks.find_one(query)
+        if not stack_data:
+            self.first_stack_insert(player, stack)
+        else:
+            new_stack = {"$set": {"stack": stack}}
+            self.stacks.update_one({"player_name": player["name"]}, new_stack)

@@ -212,6 +212,8 @@ def explore(player, db, db_id):
         for direction in init_room["exits"]:
             s.push({str(init_room["room_id"]): direction})
             db.update_que(db_id, {str(init_room["room_id"]): direction})
+        # update stack on db
+        db.update_stack(player, s.get_stack())
 
         # cooldown management
         print('Going to sleep')
@@ -221,6 +223,8 @@ def explore(player, db, db_id):
         # add exit rooms from starting room to local stack and global que
         for direction in start_room["exits"]:
             s.push({str(start_room["room_id"]): direction})
+        # update stack on db
+        db.update_stack(player, s.get_stack())
 
         # cooldown management
         print('Going to sleep')
@@ -289,6 +293,8 @@ def explore(player, db, db_id):
                     if next_room["room_id"] not in local_visited and n_dict not in global_visited:
                         s.push(n_dict)
                         db.update_que(db_id, n_dict)
+            # update stack on db
+            db.update_stack(player, s.get_stack())
 
             stack_after = s.size()
 

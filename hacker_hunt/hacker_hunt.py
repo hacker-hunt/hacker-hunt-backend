@@ -40,8 +40,8 @@ atlas_id = atlas_db.get_id()
 # print(db.get_room_by_id('0'))
 
 # print(get_status())
-# print(f"{p.wise_explore('n', 10)}")
-# explore(p, db, db_id)
+# print(f"{p.wise_explore('e', 0)}")
+explore(p, atlas_db, atlas_id)
 
 
 @app.route('/')
