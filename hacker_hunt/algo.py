@@ -127,7 +127,7 @@ def shop_check(room, player, db, db_id):
         shops = db.get_shops(db_id)
         if len(shops) > 0:
             for shop in shops:
-                if room['room_id'] not in shop[0]:
+                if room['room_id'] != shop[0]:
                     db.update_shops(
                         db_id, [room['room_id'], room["coordinates"]])
         else:
@@ -216,6 +216,15 @@ def explore(player, db, db_id):
         # cooldown management
         print('Going to sleep')
         time.sleep(init_room["cooldown"])
+    else:
+        start_room = player.initalize()
+        # add exit rooms from starting room to local stack and global que
+        for direction in start_room["exits"]:
+            s.push({str(start_room["room_id"]): direction})
+
+        # cooldown management
+        print('Going to sleep')
+        time.sleep(start_room["cooldown"])
     # STOP conditon == empty local stack and global que
     while s.size() > 0 or len(db.get_que(db_id)):
 
