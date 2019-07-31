@@ -101,7 +101,7 @@ def treasure_check(room, player, db, db_id):
                     f"There was an item '{item}', which I could not pick up")
 
             # if the player is carrying over 80% of his capacity, go to Shop at ID 1
-            if player_capacity + examined_item['weight'] > 0.8*player_capacity:
+            if player_capacity - examined_item['weight'] > 0.8*player_capacity:
                 # traverse there
                 shortest_path = find_nearest_shop(room, db, db_id)
                 traverse_path(shortest_path, player, db, db_id)
