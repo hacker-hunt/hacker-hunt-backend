@@ -46,3 +46,6 @@ class Stack():
 
     def size(self):
         return len(self.stack)
+
+    def get_stack(self):
+        return self.stack
