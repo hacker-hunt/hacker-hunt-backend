@@ -249,7 +249,7 @@ def explore(player, db, db_id):
         db_stack = db.get_stack(player)
         # pop last item as target
         # if the players DB stack is empty
-        if len(db_stack["stack"]) > 0:
+        if db_stack and len(db_stack["stack"]) > 0:
             target = db_stack["stack"].pop()
             target_id = list(target.keys())[0]
             target_room = db.get_room_by_id(target_id)
