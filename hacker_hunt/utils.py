@@ -36,6 +36,9 @@ class Queue():
     def size(self):
         return len(self.queue)
 
+    def get_queue(self):
+        return self.queue
+
 
 class Stack():
     def __init__(self):
