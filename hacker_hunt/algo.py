@@ -96,31 +96,33 @@ def treasure_check(room, player, db, db_id):
 
         if player_capacity > 1:
             for item in room['items']:
-                # examine each treasure if you can pick it up
-                examined_item = player.examine_item(item)
-                print(f"Examined item: {examined_item}")
-                # wait for cooldown before picking it up
-                time.sleep(examined_item['cooldown'])
 
-                if player_capacity > examined_item['weight']:
-                    # pick it up
-                    res = player.take_item(item)
-                    print(f'*** Picked up an item: {res} ***')
-                    # wait for cooldown before moving on
-                    time.sleep(res['cooldown'])
+                if item != 'tiny treasure' and item != 'small treasure':
+                    # examine each treasure if you can pick it up
+                    examined_item = player.examine_item(item)
+                    print(f"Examined item: {examined_item}")
+                    # wait for cooldown before picking it up
+                    time.sleep(examined_item['cooldown'])
 
-                    # get the latest player status
-                    status = get_status()
-                    print(f"Player status: {status}")
-                    time.sleep(status['cooldown'])
-                    player.update_player(status)
+                    if player_capacity > examined_item['weight']:
+                        # pick it up
+                        res = player.take_item(item)
+                        print(f'*** Picked up an item: {res} ***')
+                        # wait for cooldown before moving on
+                        time.sleep(res['cooldown'])
 
-                    # see if player have enough capacity to pick it up
-                    player_capacity = player['strength'] - \
-                        player['encumbrance']
-                else:
-                    print(
-                        f"There was an item '{item}', which I could not pick up")
+                        # get the latest player status
+                        status = get_status()
+                        print(f"Player status: {status}")
+                        time.sleep(status['cooldown'])
+                        player.update_player(status)
+
+                        # see if player have enough capacity to pick it up
+                        player_capacity = player['strength'] - \
+                            player['encumbrance']
+                    else:
+                        print(
+                            f"There was an item '{item}', which I could not pick up")
 
         # if the player is carrying over 90% of his strength, go to Shop
         if player['encumbrance'] >= 0.9*player['strength']:
