@@ -12,33 +12,32 @@ def update_map(current_room, next_room, db, db_id):
     next_id = str(next_room["room_id"])
     # get map first
     game_map = db.get_map(db_id)
-    obj = {"n": None, "s": None, "e": None, "w": None}
+
     # saves object of current room directions
-    if current_room_id in game_map:
-        current_map_directions = game_map[current_room_id]
-    else:
-        game_map[current_room_id] = obj.copy()
-        current_map_directions = game_map[current_room_id]
+    if current_room_id not in game_map:
+        game_map[current_room_id] = {}
+
+    current_map_directions = game_map[current_room_id]
 
     # update map
     # current room directions to next room
-    if current_map_directions[current_room_dir] == None:
-        current_map_directions[current_room_dir] = next_id
-        # next room directions to current room
-        if next_id in game_map:
-            next_map_dir = game_map[next_id]
-        else:
-            game_map[next_id] = obj.copy()
-            next_map_dir = game_map[next_id]
 
-        oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
-        # if (0, 'n') = 1, then (1, 's') must be equal to 0
-        next_map_dir[oposite_directions[current_room_dir]
-                     ] = current_room_id
-        # update map in db
-        game_map[current_room_id] = current_map_directions
-        game_map[next_id] = next_map_dir
-        db.update_map(db_id, game_map)
+    current_map_directions[current_room_dir] = next_id
+
+    # next room directions to current room
+    if next_id not in game_map:
+        game_map[next_id] = {}
+
+    next_map_dir = game_map[next_id]
+
+    oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
+    # if (0, 'n') = 1, then (1, 's') must be equal to 0
+    next_map_dir[oposite_directions[current_room_dir]
+                    ] = current_room_id
+    # update map in db
+    game_map[current_room_id] = current_map_directions
+    game_map[next_id] = next_map_dir
+    db.update_map(db_id, game_map)
 
 
 # traverse shortest path
@@ -267,7 +266,7 @@ def explore(player, db, db_id):
 
             """Map already discovered."""
             # update map with newly discovered directions
-            # update_map(current_room, next_room, db, db_id)
+            update_map(current_room, next_room, db, db_id)
 
             # save next_room in DB
             db.insert_room(next_room)
