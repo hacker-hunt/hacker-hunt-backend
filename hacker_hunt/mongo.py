@@ -156,3 +156,9 @@ class Database:
         query = {"player_name": player["name"]}
         stack_data = self.stacks.find_one(query)
         return stack_data
+
+    def clean_visited(self, id):
+        # find item from DB
+        query = {"_id": id}
+        cleaned_data = {"$set": {"visited": []}}
+        self.data.update_one(query, cleaned_data)
