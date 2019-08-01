@@ -124,8 +124,8 @@ def treasure_check(room, player, db, db_id):
                         print(
                             f"There was an item '{item}', which I could not pick up")
 
-        # if the player is carrying over 90% of his strength, go to Shop
-        if player['encumbrance'] >= 0.9*player['strength']:
+        # if the player is carrying over 80% of his strength, go to Shop
+        if player['encumbrance'] >= 0.8*player['strength']:
             # traverse there
             shortest_path = find_nearest_shop(room, db, db_id)
             traverse_path(shortest_path, player, db, db_id)
@@ -133,6 +133,8 @@ def treasure_check(room, player, db, db_id):
             shop_room = db.get_room_by_id(1)
             # sell items
             shop_check(shop_room, player, db, db_id)
+            # clean visited
+            db.clean_visited(db_id)
             # get path back => reversed shortest_path
             shortest_path.reverse()
             # traverse back to current room
