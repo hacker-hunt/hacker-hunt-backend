@@ -280,20 +280,16 @@ def explore(player, db, db_id):
             # change name room
             if next_room["room_id"] == 467:
                 print(f"Found Pirate Ry's name changer")
-                # cooldown management
-                print('Going to sleep\n')
-                time.sleep(next_room["cooldown"])
                 names = {"player55": "pavol", "player52": "diana", "player54": "markm", "player53": "talent antonio"}
 
                 if player["name"] in names:
+                    time.sleep(next_room["cooldown"])
                     res = player.change_name(names[player["name"]])
                     print(f"Changed name: {res}")
 
             # shrine room
             if next_room["room_id"] == 22:
                 print("Found Shrine!")
-                # cooldown management
-                print('Going to sleep\n')
                 time.sleep(next_room["cooldown"])
 
                 i_pray = player.pray()
