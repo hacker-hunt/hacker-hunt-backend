@@ -252,11 +252,11 @@ def explore(player, db, db_id):
             global_map = db.get_map(db_id)
 
             if current_room_id not in global_map:
-                global_map[current_room_id] = {
-                    "n": None, "s": None, "e": None, "w": None}
+                global_map[current_room_id] = {}
             cur_room_dirs = global_map[current_room_id]
+
             # check whether the next dir exists on the db map
-            if cur_room_dirs[current_room_dir] is not None:
+            if current_room_dir in cur_room_dirs:
                 next_room = player.wise_explore(
                     current_room_dir, cur_room_dirs[current_room_dir])
             else:
