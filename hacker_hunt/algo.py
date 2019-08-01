@@ -32,8 +32,7 @@ def update_map(current_room, next_room, db, db_id):
 
     oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
     # if (0, 'n') = 1, then (1, 's') must be equal to 0
-    next_map_dir[oposite_directions[current_room_dir]
-                    ] = current_room_id
+    next_map_dir[oposite_directions[current_room_dir]] = current_room_id
     # update map in db
     game_map[current_room_id] = current_map_directions
     game_map[next_id] = next_map_dir
@@ -140,15 +139,14 @@ def treasure_check(room, player, db, db_id):
 
 # check if room is a shop. save it in DB and sell items if yes
 def shop_check(room, player, db, db_id):
-    print(f"Player inventory: {player['inventory']}")
     if room['title'] == 'Shop':
+        print(f"Checking shop. Player inventory: {player['inventory']}")
         if len(player['inventory']) > 0:
             # sell treasures
             for item in player['inventory']:
                 shop_res = player.sell_item(item)
                 time.sleep(shop_res['cooldown'])
-                print(f'*** Sold item: {shop_res} ***')
-
+                print(f"*** Sold item: {shop_res['messages']} ***")
 
 
 # find nearest shop
@@ -167,7 +165,8 @@ def traverse(start, target, db):
     # enqueue first room
     que.enqueue({"node": start, "path": []})
     visited = set()
-    print(f'Moving back from {start["room_id"]} to {target["room_id"]}')
+    print(f'Traversing back from {start["room_id"]} to {target["room_id"]}')
+
     while que.size() > 0:
         current_room = que.queue[0]
         cr_id = current_room["node"]["room_id"]
@@ -219,7 +218,6 @@ def explore(player, db, db_id):
 
     # STOP conditon == empty local stack and global que
     while s.size() > 0:
-
         current_room = s.pop()
 
         current_room_id = list(current_room.keys())[0]
@@ -276,7 +274,6 @@ def explore(player, db, db_id):
                 print(f"You prayed at the shrine: {i_pray}")
                 time.sleep(i_pray["cooldown"])
 
-
             stack_before = s.size()
 
             # add exits from next_room to stack and que
@@ -286,7 +283,7 @@ def explore(player, db, db_id):
                 if oposite_directions[direction] != current_room_dir:
                     n_dict = {str(next_room["room_id"]): direction}
 
-                    if str(next_room) not in local_visited:
+                    if str(n_dict) not in local_visited:
                         s.push(n_dict)
 
             # update stack on db
@@ -310,7 +307,7 @@ def explore(player, db, db_id):
                         start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(
                             list(s.stack[-2].keys())[0])
-
+                        print(f'>>>> HIT A LOOPED NODE <<<<')
                         shortest_path = traverse(
                             start, target, db)
 
