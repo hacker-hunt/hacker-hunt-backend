@@ -67,6 +67,16 @@ def traverse_path(shortest_path, player, db, db_id):
             time.sleep(destination_room["cooldown"])
 
 
+# traverse from current player room to target room
+def traverse_player_to_target(player, target_id, db, db_id):
+    if target_id != None:
+        start_room = player.initalize()
+        time.sleep(start_room['cooldown'])
+        target_room = db.get_room_by_id(int(target_id))
+        path = traverse(start_room, target_room, db)
+        traverse_path(path, player, db, db_id)
+
+
 # check for treasure and pick it up if you can
 def treasure_check(room, player, db, db_id):
     print(f"Examining room for treasure and picking it up if I can")
@@ -86,34 +96,36 @@ def treasure_check(room, player, db, db_id):
 
         if player_capacity > 1:
             for item in room['items']:
-                # examine each treasure if you can pick it up
-                examined_item = player.examine_item(item)
-                print(f"Examined item: {examined_item}")
-                # wait for cooldown before picking it up
-                time.sleep(examined_item['cooldown'])
 
-                if player_capacity > examined_item['weight']:
-                    # pick it up
-                    res = player.take_item(item)
-                    print(f'*** Picked up an item: {res} ***')
-                    # wait for cooldown before moving on
-                    time.sleep(res['cooldown'])
+                if item != 'tiny treasure' and item != 'small treasure':
+                    # examine each treasure if you can pick it up
+                    examined_item = player.examine_item(item)
+                    print(f"Examined item: {examined_item}")
+                    # wait for cooldown before picking it up
+                    time.sleep(examined_item['cooldown'])
 
-                    # get the latest player status
-                    status = get_status()
-                    print(f"Player status: {status}")
-                    time.sleep(status['cooldown'])
-                    player.update_player(status)
+                    if player_capacity > examined_item['weight']:
+                        # pick it up
+                        res = player.take_item(item)
+                        print(f'*** Picked up an item: {res} ***')
+                        # wait for cooldown before moving on
+                        time.sleep(res['cooldown'])
 
-                    # see if player have enough capacity to pick it up
-                    player_capacity = player['strength'] - \
-                        player['encumbrance']
-                else:
-                    print(
-                        f"There was an item '{item}', which I could not pick up")
+                        # get the latest player status
+                        status = get_status()
+                        print(f"Player status: {status}")
+                        time.sleep(status['cooldown'])
+                        player.update_player(status)
 
-        # if the player is carrying over 90% of his strength, go to Shop
-        if player['encumbrance'] >= 0.9*player['strength']:
+                        # see if player have enough capacity to pick it up
+                        player_capacity = player['strength'] - \
+                            player['encumbrance']
+                    else:
+                        print(
+                            f"There was an item '{item}', which I could not pick up")
+
+        # if the player is carrying over 80% of his strength, go to Shop
+        if player['encumbrance'] >= 0.8*player['strength']:
             # traverse there
             shortest_path = find_nearest_shop(room, db, db_id)
             traverse_path(shortest_path, player, db, db_id)
@@ -121,6 +133,8 @@ def treasure_check(room, player, db, db_id):
             shop_room = db.get_room_by_id(1)
             # sell items
             shop_check(shop_room, player, db, db_id)
+            # clean visited
+            db.clean_visited(db_id)
             # get path back => reversed shortest_path
             shortest_path.reverse()
             # traverse back to current room
@@ -164,7 +178,7 @@ def find_nearest_shop(room, db, db_id):
     return path
 
 
-# start and target are both instances of Room Class
+# start and target are both instances of rooms
 # returns the path (list of room_id) from START to TARGET
 def traverse(start, target, db):
     que = Queue()
@@ -180,6 +194,7 @@ def traverse(start, target, db):
 
             if cr_id == target["room_id"]:
                 current_room["path"].append(cr_id)
+                print(f"Returning on this path: {current_room['path']}")
                 return current_room["path"]
 
             db_id = db.get_id()
@@ -304,6 +319,7 @@ def explore(player, db, db_id):
             # check for treasure
             treasure_check(next_room, player, db, db_id)
 
+            # change name room
             if next_room["room_id"] == 467:
                 print(f"Found Pirate Ry's name changer")
                 # cooldown management
@@ -314,6 +330,16 @@ def explore(player, db, db_id):
                 if player["name"] in names:
                     res = player.change_name(names[player["name"]])
                     print(f"Changed name: {res}")
+
+            # shrine room
+            if next_room["room_id"] == 22:
+                print("Found Shrine!")
+                # cooldown management
+                print('Going to sleep\n')
+                time.sleep(next_room["cooldown"])
+
+                i_pray = player.pray()
+                print(f"You prayed at the shrine: {i_pray}")
 
 
             stack_before = s.size()
@@ -347,7 +373,7 @@ def explore(player, db, db_id):
                     # if it doesnt (means the stack is empty) you are finished
                     if next_room["room_id"] == list(s.stack[-1].keys())[0]:
                         # BFS entry and target nodes:
-                        # both have to be instances of Room class
+                        # both have to be instances of room objects
                         # get rooms from DB by their ID
                         start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(

@@ -1,11 +1,11 @@
 import os
 
-from flask import Flask
+from flask import Flask, Response, request
+from threading import Thread
 from mongo import Database
 from player import Player, get_status
-from test_obj import test_obj
 from settings import DB, DB_NAME, PROD_DB
-from algo import explore
+from algo import explore, traverse_player_to_target
 
 
 app = Flask(__name__)
@@ -16,32 +16,34 @@ db_id = db.get_id()
 atlas_db = Database(PROD_DB, DB_NAME)
 atlas_id = atlas_db.get_id()
 
-# print(db_id, atlas_id)
-# data_to_upload = db.download_data(db_id)
-# print(data_to_upload)
-# print(atlas_db.upload_data_to_atlas(data_to_upload))
 
-# rooms_to_upload = list(db.download_rooms())
-# print(rooms_to_upload)
-# print(atlas_db.upload_rooms_to_atlas(rooms_to_upload))
-
-# Manual commands test
-# print(p.initalize())
-
+# MANUAL COMMANDS. ONLY RUN ONE AT A TIME
 # print(p.dash('w', '7', '327,256,243,178,90,86,80'))
 # print(f"{p.move('w')}")
+# print(f"{p.wise_explore('e', 0)}")
 
 # print(p.sell_item())
 # print(p.examine_item('great treasure'))
 # print(p.examine_player('shiny treasure'))
-# print(f"{p.take_item('small treasure')}")
+# print(f"{p.take_item('great treasure')}")
 # print(f"{p.drop_item('small treasure')}")
+# print(p.pray())
 
-# print(db.get_room_by_id('0'))
-
+# print(p.initalize())
 # print(get_status())
-# print(f"{p.wise_explore('e', 0)}")
-explore(p, atlas_db, atlas_id)
+# explore(p, atlas_db, atlas_id)
+# traverse_player_to_target(p, 1, atlas_db, atlas_id)
+
+
+def start_exploring():
+    explore(p, atlas_db, atlas_id)
+
+
+def requested_to_run():
+    print('STARTING TO EXPLORE')
+    t = Thread(target=start_exploring)
+    t.start()
+    return "Exploring"
 
 
 @app.route('/')
@@ -49,22 +51,38 @@ def server_check():
     return 'Server is running'
 
 
-@app.route('/launch')
+@app.route('/launch', methods=['POST'])
 def launch_app():
     '''Initiates the application, the main logic loop goes inside here'''
-
-    # initialize the algorith
-    explore(p, db, db_id)
-
-    final_map = db.get_map(db_id)
-    return f"{final_map}"
+    return Response(requested_to_run(), mimetype="text/html")
 
 
-@app.route('/player')
+@app.route('/player', methods=['GET'])
 def player_check():
     res = get_status()
     return f"{res}"
 
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=5000)
+@app.route('/stop', methods=['GET', 'POST'])
+def stop_explorer():
+
+    return "Can't stop exploring"
+
+
+@app.route('/traverse', methods=['POST'])
+def traverse_it():
+    values = request.get_json()
+
+    if "target_id" not in values:
+        return "Missing target_id in request body"
+    else:
+        target_id = values["target_id"]
+        if not isinstance(target_id, int) and not isinstance(target_id, str):
+            return "target_id is not a str or int"
+        else:
+            traverse_player_to_target(p, target_id, atlas_db, atlas_id)
+    return f'{values}'
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

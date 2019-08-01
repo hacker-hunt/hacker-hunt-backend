@@ -9,7 +9,7 @@ class Database:
         self.db = self.client[db_name]
         # create collection 'data' that contains 'visited' list, 'global_que' list and 'map' dict
         self.data = self.db.data
-        # create colelction 'rooms' that contains instances of Room class
+        # create colelction 'rooms'
         self.rooms = self.db.rooms
         # create colelction 'stacks' that contains copies of local stack for each player
         self.stacks = self.db.stacks
@@ -156,3 +156,9 @@ class Database:
         query = {"player_name": player["name"]}
         stack_data = self.stacks.find_one(query)
         return stack_data
+
+    def clean_visited(self, id):
+        # find item from DB
+        query = {"_id": id}
+        cleaned_data = {"$set": {"visited": []}}
+        self.data.update_one(query, cleaned_data)
