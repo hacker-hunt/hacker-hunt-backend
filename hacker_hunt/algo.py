@@ -156,16 +156,6 @@ def shop_check(room, player, db, db_id):
                 time.sleep(shop_res['cooldown'])
                 print(f'*** Sold item: {shop_res} ***')
 
-        # get shops from DB to check if its already saved
-        shops = db.get_shops(db_id)
-        if len(shops) > 0:
-            for shop in shops:
-                if room['room_id'] != shop[0]:
-                    db.update_shops(
-                        db_id, [room['room_id'], room["coordinates"]])
-        else:
-            db.update_shops(
-                db_id, [room['room_id'], room["coordinates"]])
 
 
 # find nearest shop
@@ -263,13 +253,12 @@ def explore(player, db, db_id):
                 next_room = player.move(current_room_dir)
 
             print(f'Next room: {next_room}')
+            # save next_room in DB
+            db.insert_room(next_room)
 
-            """Map already discovered."""
             # update map with newly discovered directions
             update_map(current_room, next_room, db, db_id)
 
-            # save next_room in DB
-            db.insert_room(next_room)
             # check if next room is a shop and save it in DB if it is
             shop_check(next_room, player, db, db_id)
 
