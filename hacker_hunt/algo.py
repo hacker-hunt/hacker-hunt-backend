@@ -308,8 +308,8 @@ def explore(player, db, db_id):
                 oposite_directions = {"n": "s", "s": "n", "e": "w", "w": "e"}
                 if oposite_directions[direction] != current_room_dir:
                     n_dict = {str(next_room["room_id"]): direction}
-                    global_visited = db.get_visited(db_id)
-                    if str(next_room) not in local_visited and n_dict not in global_visited:
+
+                    if str(next_room) not in local_visited:
                         s.push(n_dict)
                         db.update_que(db_id, n_dict)
             # update stack on db
