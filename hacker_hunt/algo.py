@@ -203,6 +203,7 @@ def traverse(start, target, db):
 def explore(player, db, db_id):
     s = Stack()
     local_visited = set()
+    visited_ids = set()
     print(f'EXPLORING THE MAP')
 
     init_room = player.initalize()
@@ -219,12 +220,13 @@ def explore(player, db, db_id):
     # STOP conditon == empty local stack and global que
     while s.size() > 0:
         current_room = s.pop()
-
         current_room_id = list(current_room.keys())[0]
         current_room_dir = current_room[current_room_id]
+
+        visited_ids.add(current_room_id)
+        print(f"Visited {len(visited_ids)} rooms")
         print(
             f'### Currently in room {current_room_id} moving to {current_room_dir} ###')
-
         if str(current_room) not in local_visited:
             local_visited.add(str(current_room))
 
