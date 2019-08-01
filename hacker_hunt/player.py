@@ -146,8 +146,43 @@ class Player:
         self.errors = p["errors"]
         self.messages = p["messages"]
 
+    def mine(self, new_proof):
+        """Submit a proposed proof and your game token to this endpoint to attempt to mine a block"""
+        res = requests.post(
+            f"{consts['bc_url']}{consts['mine']}",
+            headers=self.auth,
+            json={"proof": f"{new_proof}"}
+        )
+        return res.json()
+
+    def get_last_proof(self):
+        """Get the last valid proof to use to mine a new block. Also returns the current difficulty level"""
+        res = requests.post(
+            f"{consts['bc_url']}{consts['last_proof']}",
+            headers=self.auth
+        )
+        return res.json()
+
+    def get_coin_balance(self):
+        '''Get your Lambda Coin balance.'''
+        res = requests.post(
+            f"{consts['bc_url']}{consts['get_balance']}",
+            headers=self.auth
+        )
+        return res.json()
+
+    def transmogrify(self, item_name):
+        '''Spend your Lambda Coins to transform items into powerful equipment at the transmogrifier '''
+        res = requests.post(
+            f"{consts['path']}{consts['transmogrify']}",
+            headers=self.auth,
+            json={"name": f"{item_name}"}
+        )
+        return res.json()
 
 # Use this function to initialize an instance of player
+
+
 def get_status():
     '''Get basic player status and inventory.'''
     res = requests.post(
