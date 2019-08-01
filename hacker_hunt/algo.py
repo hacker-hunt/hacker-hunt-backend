@@ -178,7 +178,7 @@ def find_nearest_shop(room, db, db_id):
     return path
 
 
-# start and target are both instances of Room Class
+# start and target are both instances of rooms
 # returns the path (list of room_id) from START to TARGET
 def traverse(start, target, db):
     que = Queue()
@@ -373,7 +373,7 @@ def explore(player, db, db_id):
                     # if it doesnt (means the stack is empty) you are finished
                     if next_room["room_id"] == list(s.stack[-1].keys())[0]:
                         # BFS entry and target nodes:
-                        # both have to be instances of Room class
+                        # both have to be instances of room objects
                         # get rooms from DB by their ID
                         start = db.get_room_by_id(next_room["room_id"])
                         target = db.get_room_by_id(

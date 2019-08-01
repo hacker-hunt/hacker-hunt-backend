@@ -9,7 +9,7 @@ class Database:
         self.db = self.client[db_name]
         # create collection 'data' that contains 'visited' list, 'global_que' list and 'map' dict
         self.data = self.db.data
-        # create colelction 'rooms' that contains instances of Room class
+        # create colelction 'rooms'
         self.rooms = self.db.rooms
         # create colelction 'stacks' that contains copies of local stack for each player
         self.stacks = self.db.stacks
