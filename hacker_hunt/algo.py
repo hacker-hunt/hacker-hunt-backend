@@ -132,8 +132,6 @@ def treasure_check(room, player, db, db_id):
             shop_room = db.get_room_by_id(1)
             # sell items
             shop_check(shop_room, player, db, db_id)
-            # clean visited
-            db.clean_visited(db_id)
             # get path back => reversed shortest_path
             shortest_path.reverse()
             # traverse back to current room
@@ -263,7 +261,7 @@ def explore(player, db, db_id):
             shop_check(next_room, player, db, db_id)
 
             # check for treasure
-            # treasure_check(next_room, player, db, db_id)
+            treasure_check(next_room, player, db, db_id)
 
             # change name room
             if next_room["room_id"] == 467:
