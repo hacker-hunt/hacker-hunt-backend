@@ -4,7 +4,6 @@ from flask import Flask, Response, request
 from threading import Thread
 from mongo import Database
 from player import Player, get_status
-from test_obj import test_obj
 from settings import DB, DB_NAME, PROD_DB
 from algo import explore, traverse_player_to_target
 
