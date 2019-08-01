@@ -223,73 +223,30 @@ def explore(player, db, db_id):
     s = Stack()
     local_visited = set()
     print(f'EXPLORING THE MAP')
-    # first player initializes local stack and global que
-    if len(db.get_que(db_id)) == 0:
-        print('Initializing first movement')
-        # make first request from room 0
-        init_room = player.initalize()
-        print(f'initial room: {init_room}')
-        # save room in db
-        db.insert_room(init_room)
 
-        # add exit rooms from starting room to local stack and global que
-        for direction in init_room["exits"]:
-            s.push({str(init_room["room_id"]): direction})
-            db.update_que(db_id, {str(init_room["room_id"]): direction})
-        # update stack on db
-        db.update_stack(player, s.get_stack())
+    init_room = player.initalize()
+    print(f'Initial room: {init_room}')
+    time.sleep(init_room["cooldown"])
+    # save room in db
+    db.insert_room(init_room)
 
-        # cooldown management
-        print('Going to sleep')
-        time.sleep(init_room["cooldown"])
-    else:
-        start_room = player.initalize()
-        cr = start_room
-        # get stack from db
-        db_stack = db.get_stack(player)
-        # pop last item as target
-        # if the players DB stack is empty
-        if db_stack and len(db_stack["stack"]) > 0:
-            target = db_stack["stack"].pop()
-            target_id = list(target.keys())[0]
-            target_room = db.get_room_by_id(target_id)
+    for direction in init_room["exits"]:
+        s.push({str(init_room["room_id"]): direction})
 
-            if target_room["room_id"] != start_room["room_id"]:
-                # traverse there
-                shortest_path = traverse(start_room, target_room, db)
-                traverse_path(shortest_path, player, db, db_id)
-            cr = target_room
-        # add all exits to stack
-        # continue
+    db.update_stack(player, s.get_stack())
 
-        # add exit rooms from starting room to local stack and global que
-        for direction in cr["exits"]:
-            s.push({str(cr["room_id"]): direction})
-        # update stack on db
-        db.update_stack(player, s.get_stack())
-
-        # cooldown management
-        print('Going to sleep')
-        time.sleep(start_room["cooldown"])
     # STOP conditon == empty local stack and global que
-    while s.size() > 0 or len(db.get_que(db_id)):
+    while s.size() > 0:
 
-        # first empty local stack
-        if s.size() > 0:
-            current_room = s.pop()
-        else:
-            # pop from global que
-            que = db.get_que(db_id)
-            current_room = que.pop(0)
+        current_room = s.pop()
 
         current_room_id = list(current_room.keys())[0]
         current_room_dir = current_room[current_room_id]
         print(
             f'### Currently in room {current_room_id} moving to {current_room_dir} ###')
-        global_visited = db.get_visited(db_id)
-        if current_room_id not in local_visited or current_room not in global_visited:
-            local_visited.add(current_room_id)
-            db.update_visited(db_id, current_room)
+
+        if str(current_room) not in local_visited:
+            local_visited.add(str(current_room))
 
             # Make request for next movement
             global_map = db.get_map(db_id)
@@ -318,7 +275,7 @@ def explore(player, db, db_id):
             shop_check(next_room, player, db, db_id)
 
             # check for treasure
-            treasure_check(next_room, player, db, db_id)
+            # treasure_check(next_room, player, db, db_id)
 
             # change name room
             if next_room["room_id"] == 467:
