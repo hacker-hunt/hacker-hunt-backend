@@ -80,9 +80,6 @@ def traverse_player_to_target(player, target_id, db, db_id):
 def treasure_check(room, player, db, db_id):
     print(f"Examining room for treasure and picking it up if I can")
     if len(room['items']) > 0:
-        print('Waiting for CD before picking up items')
-        time.sleep(room["cooldown"])
-
         # get the latest player status
         status = get_status()
         print(f"Player status: {status}")
@@ -146,8 +143,6 @@ def shop_check(room, player, db, db_id):
     print(f"Player inventory: {player['inventory']}")
     if room['title'] == 'Shop':
         if len(player['inventory']) > 0:
-            print('Waiting for CD before selling items')
-            time.sleep(room["cooldown"])
             # sell treasures
             for item in player['inventory']:
                 shop_res = player.sell_item(item)
@@ -253,7 +248,8 @@ def explore(player, db, db_id):
             print(f'Next room: {next_room}')
             # save next_room in DB
             db.insert_room(next_room)
-
+            print('Going to sleep')
+            time.sleep(next_room["cooldown"])
             # update map with newly discovered directions
             update_map(current_room, next_room, db, db_id)
 
@@ -269,17 +265,16 @@ def explore(player, db, db_id):
                 names = {"player55": "pavol", "player52": "diana", "player54": "markm", "player53": "talent antonio"}
 
                 if player["name"] in names:
-                    time.sleep(next_room["cooldown"])
                     res = player.change_name(names[player["name"]])
                     print(f"Changed name: {res}")
+                    time.sleep(res["cooldown"])
 
             # shrine room
             if next_room["room_id"] == 22:
                 print("Found Shrine!")
-                time.sleep(next_room["cooldown"])
-
                 i_pray = player.pray()
                 print(f"You prayed at the shrine: {i_pray}")
+                time.sleep(i_pray["cooldown"])
 
 
             stack_before = s.size()
@@ -293,7 +288,7 @@ def explore(player, db, db_id):
 
                     if str(next_room) not in local_visited:
                         s.push(n_dict)
-                        db.update_que(db_id, n_dict)
+
             # update stack on db
             db.update_stack(player, s.get_stack())
 
@@ -301,9 +296,6 @@ def explore(player, db, db_id):
 
             # if we dont push any rooms to the stack, we hit dead end => start BFT
             if stack_before == stack_after:
-                # cooldown management
-                print('Going to sleep')
-                time.sleep(next_room["cooldown"])
 
                 # BFT will return shortest PATH to the next non-visited room
                 shortest_path = []
@@ -336,10 +328,6 @@ def explore(player, db, db_id):
 
                 except IndexError:
                     print('We are done!')
-            else:
-                # cooldown management
-                print('Going to sleep\n')
-                time.sleep(next_room["cooldown"])
 
         else:
             print(
