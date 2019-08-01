@@ -308,8 +308,9 @@ def explore(player, db, db_id):
 
             print(f'Next room: {next_room}')
 
+            """Map already discovered."""
             # update map with newly discovered directions
-            update_map(current_room, next_room, db, db_id)
+            # update_map(current_room, next_room, db, db_id)
 
             # save next_room in DB
             db.insert_room(next_room)
