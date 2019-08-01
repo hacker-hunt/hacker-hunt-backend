@@ -10,7 +10,13 @@ consts = {
     'change_name': 'change_name/',
     'pray': 'pray/',
     'fly': 'fly/',
-    'dash': 'dash/'
+    'dash': 'dash/',
+    'transmogrify': 'transmogrify/',
+    # paths below belong to bc_url
+    'bc_url': 'https://lambda-treasure-hunt.herokuapp.com/api/bc/',
+    'mine': 'mine/',
+    'last_proof': 'last_proof/',
+    'get_balance': 'get_balance/'
 }
 
 
