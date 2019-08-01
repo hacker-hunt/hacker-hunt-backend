@@ -309,7 +309,7 @@ def explore(player, db, db_id):
                 if oposite_directions[direction] != current_room_dir:
                     n_dict = {str(next_room["room_id"]): direction}
                     global_visited = db.get_visited(db_id)
-                    if next_room["room_id"] not in local_visited and n_dict not in global_visited:
+                    if str(next_room) not in local_visited and n_dict not in global_visited:
                         s.push(n_dict)
                         db.update_que(db_id, n_dict)
             # update stack on db
@@ -361,4 +361,4 @@ def explore(player, db, db_id):
 
         else:
             print(
-                f"cr_id: {current_room_id} in {local_visited}\n{current_room} in {global_visited}")
+                f"{current_room} already visited")
