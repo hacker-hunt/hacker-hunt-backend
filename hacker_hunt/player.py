@@ -189,7 +189,7 @@ class Player:
         checksum = '0' * difficulty
         guess = f'{last_proof}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        print(guess_hash[:difficulty], checksum)
+        print(proof, guess_hash[:difficulty], checksum, guess_hash)
         return guess_hash[:difficulty] == checksum
 
     def proof_of_work(self):
@@ -201,7 +201,7 @@ class Player:
         print(last_proof, difficulty)
         time.sleep(last_proof_obj['cooldown'])
         start_time = time.time()
-        proof = 0
+        proof = 5212121212121251518412121212121212515184
         while self.valid_proof(last_proof, proof, difficulty) is False:
             proof += 1
 
@@ -209,6 +209,14 @@ class Player:
         print(
             f'Block mined in {round(end_time-start_time, 2)}sec. Nonce: {str(proof)}')
         return proof
+
+    def equip_item(self, item_name):
+        res = requests.post(
+            f"{consts['path']}{consts['wear']}",
+            headers=self.auth,
+            json={"name": f"{item_name}"}
+        )
+        return res.json()
 
 
 # Use this function to initialize an instance of player
