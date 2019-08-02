@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, Response, request
+from flask_cors import CORS
 from threading import Thread
 from mongo import Database
 from player import Player, get_status
@@ -9,6 +10,7 @@ from algo import explore, traverse_player_to_target
 
 
 app = Flask(__name__)
+CORS(app)
 
 p = Player(get_status())
 db = Database(DB, DB_NAME)
