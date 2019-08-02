@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, Response, request
+from flask_cors import CORS
 from threading import Thread
 from mongo import Database
 from player import Player, get_status
@@ -9,6 +10,7 @@ from algo import explore, traverse_player_to_target
 
 
 app = Flask(__name__)
+CORS(app)
 
 p = Player(get_status())
 db = Database(DB, DB_NAME)
@@ -20,19 +22,38 @@ atlas_id = atlas_db.get_id()
 # MANUAL COMMANDS. ONLY RUN ONE AT A TIME
 # print(p.dash('w', '7', '327,256,243,178,90,86,80'))
 # print(f"{p.move('w')}")
-# print(f"{p.wise_explore('e', 0)}")
+# print(f"{p.wise_explore('s', 22)}")
 
-# print(p.sell_item())
-# print(p.examine_item('great treasure'))
+# print(p.sell_item('nice jacket'))
+# print(p.examine_item('amazing treasure'))
 # print(p.examine_player('shiny treasure'))
-# print(f"{p.take_item('great treasure')}")
+# print(f"{p.take_item('shiny treasure')}")
 # print(f"{p.drop_item('small treasure')}")
 # print(p.pray())
+# print(p.fly('s'))
+# print(p.change_name(f'🔥🔥🔥 pavol🔥🔥🔥'))
 
 # print(p.initalize())
 # print(get_status())
 # explore(p, atlas_db, atlas_id)
-# traverse_player_to_target(p, 1, atlas_db, atlas_id)
+# traverse_player_to_target(p, 495, atlas_db, atlas_id)
+
+# print(p.transmogrify('nice boots'))
+# print(p.equip_item('nice boots'))
+# print(p.get_coin_balance())
+
+
+def get_uncovered_rooms():
+    rooms_uncovered = []
+    rooms_covered = atlas_db.rooms.distinct("room_id")
+    for i in range(499):
+        if i not in rooms_covered:
+            rooms_uncovered.append(i)
+    print(f"Uncovered: {rooms_uncovered}")
+    print(f"Num_uncovered: {len(rooms_uncovered)}")
+
+
+# get_uncovered_rooms()
 
 
 def start_exploring():
@@ -65,8 +86,7 @@ def player_check():
 
 @app.route('/stop', methods=['GET', 'POST'])
 def stop_explorer():
-
-    return "Can't stop exploring"
+    return "You simply can not stop exploring"
 
 
 @app.route('/traverse', methods=['POST'])
