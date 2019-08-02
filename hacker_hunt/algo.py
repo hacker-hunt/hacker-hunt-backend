@@ -41,28 +41,31 @@ def update_map(current_room, next_room, db, db_id):
 
 # traverse shortest path
 def traverse_path(shortest_path, player, db, db_id):
-    for idx, room_id in enumerate(shortest_path):
-        # initialize destination variable
-        destination_id = ""
-        # get instance of room class
-        global_map = db.get_map(db_id)
-        origin = global_map[str(room_id)]
+    if shortest_path is not None:
+        for idx, room_id in enumerate(shortest_path):
+            # initialize destination variable
+            destination_id = ""
+            # get instance of room class
+            global_map = db.get_map(db_id)
+            origin = global_map[str(room_id)]
 
-        # check to see if it's the last room in the list
-        if idx < (len(shortest_path) - 1):
-            # get next room in list
-            destination_id = shortest_path[idx+1]
-            # find dir to destination
-            for direction, room_id in origin.items():
-                if room_id and int(room_id) == destination_id:
-                    next_direction = direction
+            # check to see if it's the last room in the list
+            if idx < (len(shortest_path) - 1):
+                # get next room in list
+                destination_id = shortest_path[idx+1]
+                # find dir to destination
+                for direction, room_id in origin.items():
+                    if room_id and int(room_id) == destination_id:
+                        next_direction = direction
 
-            # make wise explore request
-            destination_room = player.wise_explore(
-                next_direction, destination_id)
-            print(f'destination room: {destination_room}')
-            # do cooldown in between each loop
-            time.sleep(destination_room["cooldown"])
+                # make wise explore request
+                destination_room = player.wise_explore(
+                    next_direction, destination_id)
+                print(f'destination room: {destination_room}')
+                # do cooldown in between each loop
+                time.sleep(destination_room["cooldown"])
+    else:
+        print("shortest_path was not found!")
 
 
 # traverse from current player room to target room
@@ -92,14 +95,9 @@ def treasure_check(room, player, db, db_id):
         if player_capacity > 1:
             for item in room['items']:
 
-                if item != 'tiny treasure' and item != 'small treasure':
-                    # examine each treasure if you can pick it up
-                    examined_item = player.examine_item(item)
-                    print(f"Examined item: {examined_item}")
-                    # wait for cooldown before picking it up
-                    time.sleep(examined_item['cooldown'])
+                if item != 'tiny treasure' and item != 'small treasure' and item != 'shiny treasure' and item != 'great treasure':
 
-                    if player_capacity > examined_item['weight']:
+                    if player_capacity >= 3:
                         # pick it up
                         res = player.take_item(item)
                         print(f'*** Picked up an item: {res} ***')
@@ -144,9 +142,10 @@ def shop_check(room, player, db, db_id):
         if len(player['inventory']) > 0:
             # sell treasures
             for item in player['inventory']:
-                shop_res = player.sell_item(item)
-                time.sleep(shop_res['cooldown'])
-                print(f"*** Sold item: {shop_res['messages']} ***")
+                if item == 'amazing treasure':
+                    shop_res = player.sell_item(item)
+                    time.sleep(shop_res['cooldown'])
+                    print(f"*** Sold item: {shop_res['messages']} ***")
 
 
 # find nearest shop
@@ -176,6 +175,7 @@ def traverse(start, target, db):
             if cr_id == target["room_id"]:
                 current_room["path"].append(cr_id)
                 print(f"Returning on this path: {current_room['path']}")
+                print(f"Estimated travel time: {(len(current_room['path'])*16)//60} minutes")
                 return current_room["path"]
 
             db_id = db.get_id()
@@ -183,8 +183,8 @@ def traverse(start, target, db):
             # add all neighbouring nodes to queue
             for direction in current_room["node"]["exits"]:
                 # get ID of the room, that is in direction
-                room_in_direction_id = game_map[str(cr_id)][direction]
-                if room_in_direction_id != None:
+                if direction in game_map[str(cr_id)]:
+                    room_in_direction_id = game_map[str(cr_id)][direction]
                     # grab that room from DB
                     room = db.get_room_by_id(room_in_direction_id)
 
@@ -194,6 +194,9 @@ def traverse(start, target, db):
 
                     que.enqueue(
                         {"node": room, "path": path_to_neighbour})
+                else:
+                    print(f"Missing direction in map")
+                    print(f"Room: {cr_id} in dir '{direction}'. Map for room: {game_map[str(cr_id)]}")
 
         que.dequeue()
     return None
