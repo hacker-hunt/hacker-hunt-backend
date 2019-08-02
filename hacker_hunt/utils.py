@@ -12,6 +12,7 @@ consts = {
     'fly': 'fly/',
     'dash': 'dash/',
     'transmogrify': 'transmogrify/',
+    'wear': 'wear/',
     # paths below belong to bc_url
     'bc_url': 'https://lambda-treasure-hunt.herokuapp.com/api/bc/',
     'mine': 'mine/',
